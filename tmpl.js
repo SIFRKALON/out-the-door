@@ -5,7 +5,7 @@ const CHANGE_MIN = 5;   // locker room: from the front desk to the sauna
 // Exit walks measured on Google Maps (station → club entrance).
 const STOP_NAMES = {
   D21: "Broadway–Lafayette", L03: "Union Sq", D15: "47–50 Sts", D20: "W 4 St", L01: "8 Av",
-  M18: "Delancey–Essex", L06: "1 Av", F11: "Lexington Av/53", B08: "Lexington Av/63", D17: "34 St–Herald Sq",
+  M18: "Delancey–Essex", L06: "1 Av", F11: "Lexington Av/53", B08: "Lexington Av/63",
 };
 const CLUBS = [
   { name: "Astor Place",     doing: "in the sauna",          exits: [{ route: "M", stop: "D21", walk: 8 }, { route: "L", stop: "L03", walk: 9 }] },
@@ -13,7 +13,6 @@ const CLUBS = [
   { name: "West Village",    doing: "in the infrared sauna", exits: [{ route: "M", stop: "D20", walk: 4 }, { route: "L", stop: "L01", walk: 10 }] },
   { name: "Avenue A",        doing: "in the infrared sauna", exits: [{ route: "M", stop: "M18", walk: 7 }, { route: "J", stop: "M18", walk: 7 }, { route: "Z", stop: "M18", walk: 7 }, { route: "L", stop: "L06", walk: 13 }] },
   { name: "53rd & Lex",      doing: "at the spa",            exits: [{ route: "M", stop: "F11", walk: 1 }, { route: "M", stop: "B08", walk: 12 }, { route: "M", stop: "D15", walk: 13 }] },
-  { name: "Madison Ave",     doing: "in the baths",          exits: [{ route: "M", stop: "D17", walk: 5 }] },
 ];
 
 // rows: the model's catchable options (each has o, catchable[{t, leave, after:[[stop, time]...]}])
