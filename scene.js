@@ -49,10 +49,13 @@ const Scene = (() => {
       night:  ["#0B0F1F", "#11162B", "#18203A", "#212A4A"],
     }[phase];
     bands.forEach((c, i) => px(c, 0, i * 12, W, i === 3 ? 60 : 12));
-    if (night) stars.forEach((s, i) => { if ((Math.sin(t * 1.3 + s.p * 20) + 1) / 2 > 0.25) px(s.p > 0.8 ? "#FFF4D6" : "#9AA6D6", s.x, s.y); });
+    const kind = st.wx?.kind || "clear";
+    const overcast = ["cloudy", "rain", "storm", "snow", "fog"].includes(kind);
+    if (overcast) { ctx.fillStyle = night ? "rgba(40,44,60,0.55)" : "rgba(120,128,140,0.55)"; ctx.fillRect(0, 0, W, 60); }
+    if (night && !overcast) stars.forEach((s, i) => { if ((Math.sin(t * 1.3 + s.p * 20) + 1) / 2 > 0.25) px(s.p > 0.8 ? "#FFF4D6" : "#9AA6D6", s.x, s.y); });
 
     // sun and moon
-    if (window.SunCalc && !st.forceNight) {
+    if (window.SunCalc && !st.forceNight && !overcast) {
       const sp = SunCalc.getPosition(now, st.lat, st.lon);
       if (sp.altitude > 0) { const p = skyPos(sp.altitude, sp.azimuth); disc(p.x, p.y, 4, phase === "day" ? "#FFF1B0" : "#FFC97A"); }
     }
@@ -60,7 +63,7 @@ const Scene = (() => {
       const mp = SunCalc.getMoonPosition(now, st.lat, st.lon);
       const { fraction, phase: mph } = SunCalc.getMoonIllumination(now);
       const show = mp.altitude > 0 || st.forceNight;
-      if (show && fraction > 0.04) {
+      if (show && fraction > 0.04 && !overcast) {
         const p = st.forceNight && mp.altitude <= 0 ? { x: 150, y: 12 } : skyPos(mp.altitude, mp.azimuth);
         const r = 4, d = (mph < 0.5 ? -1 : 1) * 2 * r * fraction;
         if (night) glow(p.x, p.y, 14, 0.12);
@@ -68,6 +71,15 @@ const Scene = (() => {
         disc(p.x, p.y, r, "#F4EBD0", (dx, dy) => (dx - d) * (dx - d) + dy * dy <= r * r);
       }
     }
+
+    // clouds
+    const nC = kind === "clear" ? 0 : kind === "partly" ? 3 : 6;
+    for (let i = 0; i < nC; i++) {
+      const cx = ((rnd(i + 40) * W + t * (1.5 + rnd(i + 41) * 2)) % (W + 40)) - 20, cy = 6 + rnd(i + 42) * 22;
+      const col = night ? "#3A4060" : overcast ? "#C9CDD4" : "#FFFFFF";
+      px(col, cx, cy, 16, 3); px(col, cx + 3, cy - 2, 9, 2); px(col, cx + 5, cy - 4, 5, 2);
+    }
+    if (kind === "storm" && Math.sin(t * 0.9) > 0.995) { ctx.fillStyle = "rgba(235,240,255,0.6)"; ctx.fillRect(0, 0, W, H); }
 
     // houses
     HOUSES.forEach((h, hi) => {
@@ -132,7 +144,7 @@ const Scene = (() => {
     const walkX = st.leaving ? 14 + ((t / 9) % 1) * 148 : 14;
     const bob = Math.floor(t * 2) % 2;
     const y0 = 84 - (st.leaving ? bob : 0);
-    if (st.rain) { px("#C0492F", walkX - 3, y0 - 3, 9, 1); px("#C0492F", walkX - 2, y0 - 4, 7, 1); px("#1E2230", walkX + 1, y0 - 2, 1, 2); }
+    if (st.umbrella) { px("#C0492F", walkX - 3, y0 - 3, 9, 1); px("#C0492F", walkX - 2, y0 - 4, 7, 1); px("#1E2230", walkX + 1, y0 - 2, 1, 2); }
     px("#2A1A12", walkX, y0, 4, 1); px("#E8B98A", walkX, y0 + 1, 4, 2);
     px("#3E7D4F", walkX - 1, y0 + 3, 6, 3); px("#26232E", walkX, y0 + 6, 1, 2); px("#26232E", walkX + 3, y0 + 6, 1, 2);
 
@@ -140,6 +152,7 @@ const Scene = (() => {
     if (st.rain) drops.forEach(d => { const y = (d.y + t * 60 * d.v) % H, x = (d.x - y * 0.25 + W) % W; px("rgba(170,195,230,0.55)", x, y, 1, 3); });
     if (st.snow) drops.forEach(d => { const y = (d.y + t * 9 * d.v) % H, x = (d.x + Math.sin(t + d.v * 3) * 3 + W) % W; px("#F4F4FA", x, y); });
 
+    if (kind === "fog") { ctx.fillStyle = "rgba(220,224,230,0.35)"; ctx.fillRect(0, 30, W, 70); }
     if (night) { ctx.fillStyle = "rgba(10,12,30,0.18)"; ctx.fillRect(0, 0, W, H); }
   }
 

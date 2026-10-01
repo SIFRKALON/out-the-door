@@ -97,9 +97,29 @@ async function refresh() {
 const HOME = { lat: 40.70, lon: -73.93 };   // rounded on purpose: neighborhood-level is plenty for weather
 const WEATHER_URL = `https://api.open-meteo.com/v1/forecast?latitude=${HOME.lat}&longitude=${HOME.lon}` +
   "&hourly=apparent_temperature,precipitation_probability,precipitation,snowfall,wind_gusts_10m,uv_index,weather_code" +
-  "&current=precipitation,weather_code&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch" +
+  "&current=precipitation,weather_code,temperature_2m,apparent_temperature,cloud_cover,wind_speed_10m,is_day&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch" +
   "&timezone=America%2FNew_York&past_hours=12&forecast_hours=4&timeformat=unixtime";
 let warnings = [];
+let currentWx = null;   // conditions right now, for the backgrounds
+
+// Plain-language read of the current weather code (WMO codes used by Open-Meteo).
+function describeNow(c) {
+  if (!c) return null;
+  const code = c.weather_code ?? 0;
+  const kind =
+    code >= 95 ? "storm" :
+    (code >= 71 && code <= 77) || code === 85 || code === 86 ? "snow" :
+    (code >= 51 && code <= 67) || (code >= 80 && code <= 82) || (c.precipitation ?? 0) > 0 ? "rain" :
+    code === 45 || code === 48 ? "fog" :
+    (c.cloud_cover ?? 0) >= 70 || code === 3 ? "cloudy" :
+    (c.cloud_cover ?? 0) >= 30 || code === 2 ? "partly" : "clear";
+  const heavy = [63, 65, 67, 75, 81, 82, 86, 96, 99].includes(code);
+  const label = { storm: "thunderstorms", snow: heavy ? "heavy snow" : "snow", rain: heavy ? "heavy rain" : "rain",
+    fog: "fog", cloudy: "cloudy", partly: "partly cloudy", clear: "clear" }[kind];
+  const feels = c.apparent_temperature ?? c.temperature_2m;
+  return { kind, heavy, label, temp: Math.round(c.temperature_2m), feels: Math.round(feels),
+           cloud: c.cloud_cover ?? 0, wind: c.wind_speed_10m ?? 0, cold: feels <= 40, hot: feels >= 84 };
+}
 
 // Returns only things worth acting on in the next ~3 hours. Empty list = nothing to show.
 function weatherWarnings(w, now) {
@@ -164,7 +184,7 @@ function airQualityWarnings(a, now) {
 
 async function refreshWeather() {
   const now = Date.now() / 1000;
-  try { warnings = weatherWarnings(await (await fetch(WEATHER_URL, { cache: "no-store" })).json(), now); } catch (e) {}
+  try { const w = await (await fetch(WEATHER_URL, { cache: "no-store" })).json(); warnings = weatherWarnings(w, now); currentWx = describeNow(w.current); } catch (e) {}
   try { airWarnings = airQualityWarnings(await (await fetch(AIR_URL, { cache: "no-store" })).json(), now); } catch (e) {}
   render();
 }
@@ -201,7 +221,7 @@ function serviceAlerts(feed, now) {
     const text = (a.header_text?.translation || []).find(t => t.language === "en")?.text;
     if (!text || seen.has(text)) continue;
     seen.add(text);
-    out.push({ html: cleanAlertText(text), when: active ? "Now" : `From ${hm(soon)}${new Date(soon * 1000).getHours() < 12 ? "am" : "pm"}`,
+    out.push({ routes, html: cleanAlertText(text), when: active ? "Now" : `From ${hm(soon)}${new Date(soon * 1000).getHours() < 12 ? "am" : "pm"}`,
                type: a["transit_realtime.mercury_alert"]?.alert_type || "", active });
   }
   return out.sort((x, y) => y.active - x.active).slice(0, 5);

@@ -27,22 +27,32 @@
   .tess { display: flex; height: 10px; overflow: hidden; }
   .tess i { flex: 0 0 10px; height: 10px; margin-right: 2px; }
   .L-top { display: flex; align-items: center; gap: 12px; }
-  .L-brand { font-family: "Cinzel", Georgia, serif; font-weight: 700; letter-spacing: 4px; font-size: 15px; flex: 1; }
+  .L-brand { font-family: "Cinzel", Georgia, serif; font-weight: 700; letter-spacing: 4px; font-size: 15px; flex: 1; white-space: nowrap; }
+  @media (max-width: 480px) { .L-brand { letter-spacing: 2px; font-size: 13px; } .L-wx { display: none; } }
   .L-clock { font-weight: 600; font-variant-numeric: tabular-nums; color: #55584F; }
   .toggle { border: 2px solid currentColor; background: transparent; color: inherit; padding: 6px 12px; min-height: 40px; border-radius: 999px; font-size: 14px; font-weight: 600; }
-  .L-main { display: grid; gap: 18px; }
-  @media (min-width: 900px) { .L-main { grid-template-columns: 380px 1fr; align-items: start; } }
-  .L-plaque { background: #F8F5EE; border: 10px solid #7A2E2A; outline: 3px solid #C08A2E; outline-offset: -17px; padding: 26px 18px 22px; text-align: center; }
-  .L-cap { font-family: "Cinzel", Georgia, serif; letter-spacing: 6px; font-size: 14px; color: #2F6B5E; }
-  .L-big { font-weight: 800; font-size: clamp(96px, 26vw, 150px); line-height: 0.9; letter-spacing: -5px; color: #24427A; font-variant-numeric: tabular-nums; margin: 6px 0; }
-  .L-big.now { font-size: clamp(64px, 18vw, 96px); letter-spacing: -2px; color: #7A2E2A; }
-  .L-what { margin-top: 14px; font-size: 18px; line-height: 1.35; }
+  #L-fx { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 0; }
+  .L { position: relative; z-index: 1; }
+  body.t-line.dark .L-brand, body.t-line.dark .L-clock, body.t-line.dark .L-foot, body.t-line.dark .L-top .toggle, body.t-line.dark .L-wx { color: #F1EEE6; }
+  .L-wx { font-family: "Archivo Narrow", sans-serif; font-size: 15px; color: #3E413B; }
+  .L-main { display: grid; gap: 16px; }
+  @media (min-width: 900px) { .L-main { grid-template-columns: minmax(0, 1fr) 340px; align-items: start; } }
+  .L-col { display: grid; gap: 16px; }
+  .L-plaque { background: #F8F5EE; border: 8px solid #7A2E2A; outline: 2px solid #C08A2E; outline-offset: -14px; padding: 20px 22px 18px; text-align: center; }
+  .L-head1 { font-weight: 800; font-size: clamp(34px, 9vw, 64px); line-height: 1; letter-spacing: -1.5px; white-space: nowrap; color: #1B1C1A; font-variant-numeric: tabular-nums; }
+  .L-head1 em { font-style: normal; color: #24427A; }
+  .L-head1.now { color: #7A2E2A; }
+  .L-what { margin-top: 10px; font-size: 18px; line-height: 1.35; }
   .L-what b { font-weight: 800; }
   .L-sub { color: #55584F; font-family: "Archivo Narrow", sans-serif; font-size: 15px; margin-top: 4px; }
   .L-side { display: grid; gap: 12px; }
   .L-note { background: #F8F5EE; border: 2px solid #C08A2E; padding: 10px 14px; }
   .L-note b { display: block; font-size: 16px; }
   .L-note span { font-family: "Archivo Narrow", sans-serif; font-size: 14px; color: #55584F; }
+  .L-notices { background: rgba(248,245,238,0.92); border: 1px solid #B9B09C; }
+  .L-notices summary { padding: 10px 14px; font-family: "Cinzel", Georgia, serif; letter-spacing: 2px; font-size: 13px; cursor: pointer; list-style-position: inside; }
+  .L-notices > div { display: grid; gap: 10px; padding: 0 12px 12px; }
+  .L-chip { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; background: #24427A; color: #F8F5EE; font-family: "Archivo Narrow", sans-serif; font-size: 11px; letter-spacing: 0.5px; vertical-align: 2px; }
   .L-alert { background: #24427A; color: #F8F5EE; border: 3px solid #F8F5EE; outline: 2px solid #24427A; padding: 10px 14px; font-size: 15px; line-height: 1.35; }
   .L-alert small { display: block; font-family: "Cinzel", serif; letter-spacing: 3px; font-size: 11px; opacity: 0.85; margin-bottom: 3px; }
   .L-map { background: #F8F5EE; border: 2px solid #1B1C1A; padding: 8px 18px; }
@@ -90,6 +100,7 @@
   .H-dot { width: 22px; height: 22px; display: grid; place-items: center; color: #fff; font-family: "Pixelify Sans", sans-serif; font-size: 14px; font-weight: 600; clip-path: polygon(30% 0, 70% 0, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0 70%, 0 30%); }
   .H-route .when { color: #FFC966; text-align: right; }
   .H-route small { display: block; color: #9C92B5; font-size: 18px; }
+  .H-notices summary { cursor: pointer; list-style-position: inside; }
   .H-flyer { background: #F4F1EA; color: #161616; padding: 10px 12px; font-size: 20px; line-height: 1.05; position: relative; box-shadow: 3px 3px 0 #0A0914; }
   .H-flyer:nth-child(odd) { transform: rotate(-1deg); }
   .H-flyer:nth-child(even) { transform: rotate(0.8deg); }
@@ -106,28 +117,30 @@
 <body class="t-line">
 
 <!-- ============ LINE ============ -->
+<canvas id="L-fx" aria-hidden="true"></canvas>
 <div class="L" id="ui-line">
   <header>
     <div class="tess" id="L-tess" aria-hidden="true"></div>
     <div class="L-top" style="margin-top: 10px">
       <span class="L-brand">OUT THE DOOR</span>
+      <span class="L-wx" id="L-wx"></span>
       <span class="L-clock" id="L-clock"></span>
       <button class="toggle" type="button" data-toggle>Neighborhood</button>
     </div>
   </header>
   <div class="L-main">
-    <div class="L-side">
+    <div class="L-col">
       <section class="L-plaque" aria-live="polite">
-        <div class="L-cap" id="L-cap1">LEAVE IN</div>
-        <div class="L-big" id="L-big">–</div>
-        <div class="L-cap" id="L-cap2">MINUTES</div>
-        <div class="L-what" id="L-what">Listening for trains…</div>
+        <div class="L-head1" id="L-head1">Listening for trains…</div>
+        <div class="L-what" id="L-what"></div>
         <div class="L-sub" id="L-sub"></div>
       </section>
-      <div id="L-pack" class="L-side"></div>
-      <div id="L-alerts" class="L-side"></div>
+      <section class="L-map" id="L-map" aria-label="All train options"></section>
     </div>
-    <section class="L-map" id="L-map" aria-label="All train options"></section>
+    <div class="L-col">
+      <div id="L-pack" class="L-col"></div>
+      <details class="L-notices" id="L-notices" hidden><summary id="L-notices-sum">Service notices</summary><div id="L-alerts"></div></details>
+    </div>
   </div>
   <footer class="L-foot"><span id="L-sky"></span><span id="L-status"></span></footer>
 </div>
@@ -148,9 +161,9 @@
       </section>
     </div>
     <div class="H-col">
-      <section class="H-panel" id="H-pack" hidden><div class="H-label">PACK</div><div id="H-pack-items"></div></section>
       <section class="H-panel"><div class="H-label">OTHER ROUTES</div><div id="H-routes"></div></section>
-      <section class="H-col" id="H-alerts"></section>
+      <section class="H-panel" id="H-pack" hidden><div class="H-label">PACK</div><div id="H-pack-items"></div></section>
+      <details class="H-panel H-notices" id="H-notices" hidden><summary class="H-label" id="H-notices-sum">NOTICES</summary><div class="H-col" id="H-alerts" style="padding-top:10px"></div></details>
       <footer class="H-foot">
         <button class="H-made" type="button" id="H-made">I made it out</button>
         <span id="H-streak"></span>
@@ -164,6 +177,7 @@
 <script src="suncalc.js"></script>
 <script src="data.js"></script>
 <script src="scene.js"></script>
+<script src="fx.js"></script>
 <script>
 // ---------- themes: line → neighborhood → neighborhood at night ----------
 const THEMES = ["line", "hood", "night"];
@@ -182,7 +196,9 @@ function applyTheme() {
   document.getElementById("ui-hood").hidden = isLine;
   document.querySelectorAll("[data-toggle]").forEach(b => b.textContent = NEXT_LABEL[theme]);
   document.querySelector('meta[name="theme-color"]')?.remove();
-  if (isLine) Scene.unmount(); else Scene.mount(document.getElementById("H-scene"));
+  document.getElementById("L-fx").hidden = !isLine;
+  if (isLine) { Scene.unmount(); Fx.mount(document.getElementById("L-fx")); }
+  else { Fx.unmount(); Scene.mount(document.getElementById("H-scene")); }
   render();
 }
 document.querySelectorAll("[data-toggle]").forEach(b => b.addEventListener("click", () => {
@@ -206,28 +222,33 @@ function model() {
   const pack = [...warnings, ...airWarnings];
   const age = now - updated;
   const status = lastError ? `Can't reach the MTA. Retrying…` : updated ? (age > 120 ? `Data ${Math.round(age / 60)} min old` : `Live · ${Math.round(age)}s ago`) : "";
-  return { now, rows, best: rows[0], pack, alerts, sky: skyLine(now), status };
+  const alertRoutes = new Set(alerts.filter(a => a.active).flatMap(a => a.routes || []));
+  return { now, rows, best: rows[0], pack, alerts, alertRoutes, sky: skyLine(now), status };
 }
 
 // ---------- LINE render ----------
 const TRACK_WINDOW = 15 * 60;   // a car starts its run 15 min before you need to leave
 function renderLine(m) {
   document.getElementById("L-clock").textContent = hm(m.now);
-  const big = document.getElementById("L-big"), b = m.best;
+  const head = document.getElementById("L-head1"), b = m.best;
   if (!b) {
-    big.textContent = "–"; big.className = "L-big";
-    document.getElementById("L-what").textContent = updated ? "No Manhattan-bound trains you can make right now." : "Listening for trains…";
-    document.getElementById("L-sub").textContent = "";
+    head.textContent = updated ? "No trains right now" : "Listening for trains…"; head.className = "L-head1";
+    document.getElementById("L-what").textContent = ""; document.getElementById("L-sub").textContent = "";
   } else {
-    const x = b.catchable[0];
-    const now = x.leave < 60;
-    big.textContent = now ? "NOW" : mins(x.leave); big.className = "L-big" + (now ? " now" : "");
-    document.getElementById("L-cap1").textContent = now ? "TIME TO" : "LEAVE IN";
-    document.getElementById("L-cap2").textContent = now ? "GO" : mins(x.leave) === 1 ? "MINUTE" : "MINUTES";
+    const x = b.catchable[0], go = x.leave < 60;
+    head.className = "L-head1" + (go ? " now" : "");
+    head.innerHTML = go ? "Time to go" : `Leave in <em>${mins(x.leave)}</em> min`;
     document.getElementById("L-what").innerHTML = `for the <b>${b.o.route}</b> at ${b.o.station}`;
     document.getElementById("L-sub").textContent = `toward ${x.terminal} · arrives ${hm(x.t)} · ${b.o.walk} min walk`;
   }
+  const wx = currentWx;
+  document.getElementById("L-wx").textContent = wx ? `${wx.temp}° · ${wx.label}` : "";
+  document.body.classList.toggle("dark", Fx.isNight());
+  Fx.set({ wx, lat: HOME.lat, lon: HOME.lon });
   document.getElementById("L-pack").innerHTML = m.pack.map(([t, d]) => `<div class="L-note"><b>${t}</b><span>${d}</span></div>`).join("");
+  const nEl = document.getElementById("L-notices");
+  nEl.hidden = !m.alerts.length;
+  document.getElementById("L-notices-sum").textContent = `SERVICE NOTICES · ${m.alerts.length}`;
   document.getElementById("L-alerts").innerHTML = m.alerts.map(a => `<div class="L-alert"><small>${a.when.toUpperCase()}${a.type ? " · " + esc(a.type).toUpperCase() : ""}</small>${a.html}</div>`).join("");
 
   const map = document.getElementById("L-map");
@@ -239,7 +260,7 @@ function renderLine(m) {
       map.innerHTML = m.rows.map(r => `<div class="L-row" id="L-r${r.i}">
         <div class="bullet" style="background:${r.color}">${r.o.route}</div>
         <div class="L-track"><div class="rail" style="background:${r.color}"></div><div class="stn"></div><div class="car"></div></div>
-        <div class="L-info"><div class="L-leave"></div><div class="L-stn">${r.o.station.toUpperCase()}</div><div class="L-next"></div></div>
+        <div class="L-info"><div class="L-leave"></div><div class="L-stn"></div><div class="L-next"></div></div>
       </div>`).join("");
       map.dataset.keys = keys.join();
     }
@@ -250,6 +271,8 @@ function renderLine(m) {
       el.querySelector(".car").style.left = `${p * Math.max(0, track.clientWidth - 46)}px`;
       el.classList.toggle("go", x.leave < 60);
       el.querySelector(".L-leave").textContent = x.leave < 60 ? "Leave now" : `Leave in ${mins(x.leave)}`;
+      const hasNotice = m.alertRoutes.has(r.o.route);
+      el.querySelector(".L-stn").innerHTML = esc(r.o.station.toUpperCase()) + (hasNotice ? '<span class="L-chip">notice</span>' : "");
       const later = r.catchable.slice(1, 3).map(y => mins(y.leave)).join(", ");
       el.querySelector(".L-next").textContent = `to ${x.terminal}${later ? ` · then ${later} min` : ""}`;
     });
@@ -293,6 +316,8 @@ function renderHood(m) {
       <div>${r.o.station}<small>to ${x.terminal}${later ? ` · then ${later}` : ""}</small></div>
       <div class="when">${x.leave < 60 ? "now" : `in ${mins(x.leave)}`}</div></div>`;
   }).join("") || `<div class="H-item"><span>Nothing else coming.</span></div>`;
+  document.getElementById("H-notices").hidden = !m.alerts.length;
+  document.getElementById("H-notices-sum").textContent = `NOTICES · ${m.alerts.length}`;
   document.getElementById("H-alerts").innerHTML = m.alerts.map(a => `<div class="H-flyer"><small>${a.when.toUpperCase()}${a.type ? " · " + esc(a.type).toUpperCase() : ""}</small>${a.html}</div>`).join("");
   const s = streak();
   document.getElementById("H-streak").textContent = s ? `Streak: ${s.count} day${s.count === 1 ? "" : "s"}` : "";
@@ -304,7 +329,10 @@ function renderHood(m) {
   const next = (trains[central] || []).find(x => x.t > m.now - 60);
   Scene.set({
     forceNight: theme === "night", lat: HOME.lat, lon: HOME.lon,
-    rain: !!warnings.rain, snow: !!warnings.snow,
+    rain: currentWx ? ["rain", "storm"].includes(currentWx.kind) : !!warnings.rain,
+    snow: currentWx ? currentWx.kind === "snow" : !!warnings.snow,
+    umbrella: !!warnings.rain || (currentWx && ["rain", "storm"].includes(currentWx.kind)),
+    wx: currentWx,
     leaving: !!b && b.catchable[0].leave < 60,
     train: next ? { secs: next.t - m.now, color: ROUTE_COLOR.M } : null,
   });
