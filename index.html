@@ -179,6 +179,25 @@
   .pr-chip { background: #222; color: #F4EFE3; border: 1px solid #3A3A3A; border-radius: 999px; padding: 6px 12px; min-height: 34px; font-size: 13px; }
   .pr-chip[aria-pressed="true"] { background: #D9B24A; color: #161616; border-color: #D9B24A; font-weight: 700; }
   .pr-badge { position: fixed; top: max(8px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); z-index: 40; background: #D9B24A; color: #161616; font: 700 12px "Archivo", sans-serif; padding: 5px 12px; border-radius: 999px; box-shadow: 0 4px 14px rgba(0,0,0,0.2); pointer-events: none; }
+  /* ---- Line at night: boxes become dark teal glass trimmed in brass, to sit under the Grand Central ceiling ---- */
+  body.t-line.dark .L-head1, body.t-line.dark .L-what, body.t-line.dark .L-what b { color: #F4EBD0; }
+  body.t-line.dark .L-head1.now { color: #F0B08A; }
+  body.t-line.dark .L-sub { color: #AFC0BA; }
+  body.t-line.dark .L-map { background: rgba(10, 30, 31, 0.86); border-color: rgba(217, 178, 74, 0.55); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+  body.t-line.dark .sign { box-shadow: inset 0 2px 0 #D9B24A; }
+  body.t-line.dark .L-row, body.t-line.dark .T-row { border-bottom-color: rgba(233, 200, 106, 0.16); }
+  body.t-line.dark .L-leave, body.t-line.dark .T-doing { color: #F4EBD0; }
+  body.t-line.dark .L-walk { background: rgba(244, 235, 208, 0.10); color: #E6DCC6; }
+  body.t-line.dark .L-next, body.t-line.dark .T-how, body.t-line.dark .L-empty, body.t-line.dark .T-min small { color: #9FB2AC; }
+  body.t-line.dark .L-then, body.t-line.dark .T-how b { color: #E6DCC6; }
+  body.t-line.dark .tablet { color: #E9D29A; }
+  body.t-line.dark .T-min { color: #E9C86A; }
+  body.t-line.dark .T-row.top .T-min { color: #F0B08A; }
+  body.t-line.dark .L-track .stn { background: #0F2627; border-color: #F4EBD0; }
+  body.t-line.dark .L-track .car { background: #EDE4CC; }
+  body.t-line.dark .L-track .car::after { background: #1B1C1A; }
+  body.t-line.dark .L-note, body.t-line.dark .L-notices { background: rgba(10, 30, 31, 0.86); border-color: rgba(217, 178, 74, 0.6); color: #F4EBD0; }
+  body.t-line.dark .L-note span { color: #AFC0BA; }
   :focus-visible { outline: 3px solid #FFC966; outline-offset: 2px; }
   @media (prefers-reduced-motion: reduce) { .L-track .car { transition: none; } .L-row.go .stn { animation: none; } }
 </style>
@@ -339,7 +358,8 @@ function paintPlaque() {
   const T = W < 480 ? 7.5 : 9, G = 1.5, S = T + G;
   const cols = Math.floor((W - G) / S), rows = Math.floor((H - G) / S);
   const ox = (W - cols * S - G) / 2 + G, oy = (H - rows * S - G) / 2 + G;
-  c.fillStyle = TILE.grout; c.fillRect(0, 0, W, H);
+  const dark = document.body.classList.contains("dark");
+  c.fillStyle = dark ? "#0D1D1E" : TILE.grout; c.fillRect(0, 0, W, H);
   for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
     const ring = Math.min(x, y, cols - 1 - x, rows - 1 - y), i = y * 997 + x;
     const corner = (x < 3 || x > cols - 4) && (y < 3 || y > rows - 4);
@@ -350,12 +370,12 @@ function paintPlaque() {
     } else if (ring === 0) col = TILE.brick;
     else if (ring === 1) col = (x + y) % 2 ? TILE.ochre : TILE.sage;
     else if (ring === 2) col = TILE.navy;
-    else col = TILE.field;
+    else col = dark ? "#173230" : TILE.field;
     c.fillStyle = tone(col, i, ring >= 3 && !corner ? 0.05 : 0.12);
     c.fillRect(ox + x * S, oy + y * S, T, T);
   }
   // soften the grout inside the field so the words sit on calm tile
-  c.fillStyle = "rgba(243,238,226,0.55)";
+  c.fillStyle = dark ? "rgba(23,50,48,0.6)" : "rgba(243,238,226,0.55)";
   c.fillRect(ox + 3 * S, oy + 3 * S, (cols - 6) * S - G, (rows - 6) * S - G);
 }
 addEventListener("resize", paintPlaque);
@@ -504,7 +524,9 @@ function renderLine(m) {
   }
   const wx = wxNow();
   document.getElementById("L-wx").textContent = wx ? `${wx.temp}° · ${wx.label}` : "";
+  const wasDark = document.body.classList.contains("dark");
   document.body.classList.toggle("dark", Fx.isNight());
+  if (wasDark !== document.body.classList.contains("dark")) paintPlaque();
   Fx.set({ wx, lat: HOME.lat, lon: HOME.lon });
   document.getElementById("L-pack").innerHTML = m.pack.map(([t, d]) => `<div class="L-note"><b>${t}</b><span>${d}</span></div>`).join("");
   const nEl = document.getElementById("L-notices");
