@@ -86,7 +86,7 @@ async function refresh() {
       if (k < 0 || !trip.stops[k][1] || trip.stops[k][1] < now - 60) continue;
       if (!trip.stops.slice(k + 1).some(s => s[0] === o.toward)) continue;   // not Manhattan-bound
       const last = trip.stops[trip.stops.length - 1][0];
-      next[i].push({ t: trip.stops[k][1], terminal: TERMINALS[last] || "Manhattan" });
+      next[i].push({ t: trip.stops[k][1], terminal: TERMINALS[last] || "Manhattan", after: trip.stops.slice(k + 1) });
     }
     next[i].sort((a, b) => a.t - b.t);
   });

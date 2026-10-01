@@ -38,6 +38,22 @@
   .L-main { display: grid; gap: 16px; }
   @media (min-width: 900px) { .L-main { grid-template-columns: minmax(0, 1fr) 340px; align-items: start; } }
   .L-col { display: grid; gap: 16px; }
+  .views { display: inline-flex; border: 2px solid currentColor; border-radius: 999px; overflow: hidden; }
+  .views button { border: 0; background: transparent; color: inherit; padding: 6px 14px; min-height: 36px; font-size: 14px; font-weight: 600; }
+  .views button[aria-pressed="true"] { background: #1B1C1A; color: #F8F5EE; }
+  body.t-line.dark .views { color: #F1EEE6; } body.t-line.dark .views button[aria-pressed="true"] { background: #F1EEE6; color: #1B1C1A; }
+  .L-views { margin-top: 12px; }
+  .T-row { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 14px; align-items: center; padding: 14px 0; border-bottom: 1px solid #E2DCCD; }
+  .T-row:last-child { border-bottom: 0; }
+  .T-min { font-weight: 800; font-size: 40px; line-height: 0.9; letter-spacing: -1.5px; color: #24427A; font-variant-numeric: tabular-nums; text-align: right; }
+  .T-min small { display: block; font-size: 13px; letter-spacing: 0; color: #55584F; font-weight: 600; margin-top: 4px; }
+  .T-row.top .T-min { font-size: 56px; color: #7A2E2A; }
+  .T-doing { font-size: 19px; font-weight: 800; }
+  .T-row.top .T-doing { font-size: 24px; }
+  .T-club { font-family: "Cinzel", Georgia, serif; font-size: 12px; letter-spacing: 2px; color: #2F6B5E; margin-top: 2px; }
+  .T-how { font-family: "Archivo Narrow", sans-serif; font-size: 14px; color: #55584F; margin-top: 3px; }
+  .T-how b { color: #1B1C1A; }
+  .T-head { font-family: "Cinzel", Georgia, serif; letter-spacing: 3px; font-size: 13px; padding: 12px 0 4px; color: #55584F; }
   .L-plaque { background: #F8F5EE; border: 8px solid #7A2E2A; outline: 2px solid #C08A2E; outline-offset: -14px; padding: 20px 22px 18px; text-align: center; }
   .L-head1 { font-weight: 800; font-size: clamp(34px, 9vw, 64px); line-height: 1; letter-spacing: -1.5px; white-space: nowrap; color: #1B1C1A; font-variant-numeric: tabular-nums; }
   .L-head1 em { font-style: normal; color: #24427A; }
@@ -108,6 +124,13 @@
   .H-flyer::before { content: ""; position: absolute; top: -6px; left: 40%; width: 46px; height: 12px; background: rgba(255, 232, 0, 0.75); }
   .H-flyer small { display: block; font-family: "Pixelify Sans", sans-serif; font-size: 12px; color: #D6338F; letter-spacing: 1px; }
   .H-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; font-size: 20px; color: #9C92B5; }
+  .H-top .views { border-radius: 0; border-color: #FFC966; color: #FFC966; font-family: "Pixelify Sans", sans-serif; }
+  .H-top .views button { border-radius: 0; font-size: 13px; padding: 6px 10px; }
+  .H-top .views button[aria-pressed="true"] { background: #FFC966; color: #1E1A2E; }
+  .H-tmpl { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 10px; align-items: center; font-size: 22px; padding: 5px 0; }
+  .H-tmpl .n { color: #FFC966; font-size: 30px; text-align: right; line-height: 1; }
+  .H-tmpl .n small { display: block; font-size: 16px; color: #9C92B5; }
+  .H-tmpl small { display: block; color: #9C92B5; font-size: 18px; }
   .H-made { font-family: "Pixelify Sans", sans-serif; background: #FFC966; color: #1E1A2E; border: 0; padding: 8px 14px; min-height: 40px; box-shadow: 0 4px 0 #A9772B; }
   .H-made:active { transform: translateY(3px); box-shadow: 0 1px 0 #A9772B; }
 
@@ -128,6 +151,7 @@
       <span class="L-clock" id="L-clock"></span>
       <button class="toggle" type="button" data-toggle>Neighborhood</button>
     </div>
+    <div class="views L-views" role="group" aria-label="View"><button type="button" data-view="trains">Trains</button><button type="button" data-view="tmpl">Time to TMPL</button></div>
   </header>
   <div class="L-main">
     <div class="L-col">
@@ -137,6 +161,7 @@
         <div class="L-sub" id="L-sub"></div>
       </section>
       <section class="L-map" id="L-map" aria-label="All train options"></section>
+      <section class="L-map" id="L-tmpl" aria-label="Time to each TMPL club" hidden></section>
     </div>
     <div class="L-col">
       <div id="L-pack" class="L-col"></div>
@@ -151,6 +176,7 @@
   <header class="H-top">
     <span class="day" id="H-day"></span>
     <span id="H-clock"></span>
+    <span class="views" role="group" aria-label="View"><button type="button" data-view="trains">Trains</button><button type="button" data-view="tmpl">TMPL</button></span>
     <button class="toggle" type="button" data-toggle>Night</button>
   </header>
   <div class="H-main">
@@ -162,7 +188,7 @@
       </section>
     </div>
     <div class="H-col">
-      <section class="H-panel"><div class="H-label">OTHER ROUTES</div><div id="H-routes"></div></section>
+      <section class="H-panel"><div class="H-label" id="H-routes-label">OTHER ROUTES</div><div id="H-routes"></div></section>
       <section class="H-panel" id="H-pack" hidden><div class="H-label">PACK</div><div id="H-pack-items"></div></section>
       <details class="H-panel H-notices" id="H-notices" hidden><summary class="H-label" id="H-notices-sum">NOTICES</summary><div class="H-col" id="H-alerts" style="padding-top:10px"></div></details>
       <footer class="H-foot">
@@ -175,15 +201,25 @@
   </div>
 </div>
 
-<script src="suncalc.js?v=9"></script>
-<script src="data.js?v=9"></script>
-<script src="scene.js?v=9"></script>
-<script src="fx.js?v=9"></script>
+<script src="suncalc.js?v=10"></script>
+<script src="data.js?v=10"></script>
+<script src="scene.js?v=10"></script>
+<script src="fx.js?v=10"></script>
+<script src="tmpl.js?v=10"></script>
 <script>
 // ---------- themes: line → neighborhood → neighborhood at night ----------
 const THEMES = ["line", "hood", "night"];
 const NEXT_LABEL = { line: "Neighborhood", hood: "Night", night: "Line map" };
 const ROUTE_COLOR = { M: "#FF6319", J: "#996633", Z: "#996633", L: "#A7A9AC" };
+let view = "trains";
+try { view = localStorage.getItem("otd-view") || "trains"; } catch (e) {}
+const qv = new URLSearchParams(location.search).get("view");
+if (qv === "tmpl" || qv === "trains") view = qv;
+document.querySelectorAll("[data-view]").forEach(b => b.addEventListener("click", () => {
+  view = b.dataset.view;
+  try { localStorage.setItem("otd-view", view); } catch (e) {}
+  render();
+}));
 let theme = "line";
 try { theme = localStorage.getItem("otd-theme") || "line"; } catch (e) {}
 const q = new URLSearchParams(location.search).get("theme");
@@ -278,6 +314,20 @@ function renderLine(m) {
       el.querySelector(".L-next").textContent = `to ${x.terminal}${later ? ` · then ${later} min` : ""}`;
     });
   }
+  const tm = view === "tmpl";
+  document.querySelector(".L-plaque").hidden = tm;
+  map.hidden = tm;
+  const tEl = document.getElementById("L-tmpl");
+  tEl.hidden = !tm;
+  if (tm) {
+    const clubs = tmplTimes(m.rows, m.now);
+    tEl.innerHTML = `<div class="T-head">YOU COULD BE…</div>` + clubs.map((c, n) => c.best ? `<div class="T-row${n === 0 ? " top" : ""}">
+        <div class="T-min">${c.mins}<small>min</small></div>
+        <div><div class="T-doing">${c.doing}</div><div class="T-club">${c.name.toUpperCase()}</div>
+        <div class="T-how"><b>${c.best.route}</b> from ${c.best.from} · ${c.best.leave < 60 ? "leave now" : `leave in ${mins(c.best.leave)}`} · off at ${c.best.exit}</div></div>
+      </div>` : `<div class="T-row"><div class="T-min">–</div><div><div class="T-doing">${c.doing}</div><div class="T-club">${c.name.toUpperCase()}</div><div class="T-how">No live route right now</div></div></div>`).join("");
+  }
+  document.querySelectorAll("[data-view]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.view === view)));
   document.getElementById("L-sky").textContent = m.sky;
   document.getElementById("L-status").textContent = m.status;
 }
@@ -317,6 +367,15 @@ function renderHood(m) {
       <div>${r.o.station}<small>to ${x.terminal}${later ? ` · then ${later}` : ""}</small></div>
       <div class="when">${x.leave < 60 ? "now" : `in ${mins(x.leave)}`}</div></div>`;
   }).join("") || `<div class="H-item"><span>Nothing else coming.</span></div>`;
+  document.getElementById("H-routes-label").textContent = view === "tmpl" ? "TIME TO TMPL" : "OTHER ROUTES";
+  if (view === "tmpl") {
+    const clubs = tmplTimes(m.rows, m.now);
+    const top = clubs[0];
+    if (top && top.best) qEl.innerHTML = `Side quest: you could be ${top.doing} at <b>${top.name}</b> in <em>${top.mins} min</em>. Take the ${top.best.route} from ${top.best.from}${top.best.leave < 60 ? ", leaving now" : `, leave in ${mins(top.best.leave)}`}.`;
+    document.getElementById("H-routes").innerHTML = clubs.map(c => `<div class="H-tmpl"><div class="n">${c.best ? c.mins : "–"}<small>min</small></div>
+      <div>${c.doing} · ${c.name}<small>${c.best ? `${c.best.route} from ${c.best.from}, off at ${c.best.exit}` : "no live route right now"}</small></div></div>`).join("");
+  }
+  document.querySelectorAll("[data-view]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.view === view)));
   document.getElementById("H-notices").hidden = !m.alerts.length;
   document.getElementById("H-notices-sum").textContent = `NOTICES · ${m.alerts.length}`;
   document.getElementById("H-alerts").innerHTML = m.alerts.map(a => `<div class="H-flyer"><small>${a.when.toUpperCase()}${a.type ? " · " + esc(a.type).toUpperCase() : ""}</small>${a.html}</div>`).join("");
