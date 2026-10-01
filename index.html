@@ -28,7 +28,7 @@
   .tess i { flex: 0 0 10px; height: 10px; margin-right: 2px; }
   .L-top { display: flex; align-items: center; gap: 12px; }
   .L-brand { font-family: "Cinzel", Georgia, serif; font-weight: 700; letter-spacing: 4px; font-size: 15px; flex: 1; white-space: nowrap; }
-  @media (max-width: 480px) { .L-brand { letter-spacing: 2px; font-size: 13px; } .L-wx { display: none; } }
+  @media (max-width: 480px) { .L-brand { letter-spacing: 2px; font-size: 13px; } .L-wx { display: none; } .L-top { gap: 8px; } .toggle { font-size: 12px; padding: 5px 10px; } }
   .L-clock { font-weight: 600; font-variant-numeric: tabular-nums; color: #55584F; }
   .toggle { border: 2px solid currentColor; background: transparent; color: inherit; padding: 6px 12px; min-height: 40px; border-radius: 999px; font-size: 14px; font-weight: 600; }
   #L-fx { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 0; }
@@ -274,7 +274,7 @@ function renderLine(m) {
       el.querySelector(".L-leave").textContent = x.leave < 60 ? "Leave now" : `Leave in ${mins(x.leave)}`;
       const hasNotice = m.alertRoutes.has(r.o.route);
       el.querySelector(".L-stn").innerHTML = esc(r.o.station.toUpperCase()) + (hasNotice ? '<span class="L-chip">notice</span>' : "");
-      const later = r.catchable.slice(1, 3).map(y => mins(y.leave)).join(", ");
+      const later = r.catchable.slice(1, 3).map(y => y.leave < 60 ? "now" : mins(y.leave)).join(", ");
       el.querySelector(".L-next").textContent = `to ${x.terminal}${later ? ` · then ${later} min` : ""}`;
     });
   }
@@ -312,7 +312,7 @@ function renderHood(m) {
   pack.hidden = !m.pack.length;
   document.getElementById("H-pack-items").innerHTML = m.pack.map(([t, dd]) => `<div class="H-item">${t}<br><span>${dd}</span></div>`).join("");
   document.getElementById("H-routes").innerHTML = m.rows.slice(1).map(r => {
-    const x = r.catchable[0], later = r.catchable.slice(1, 3).map(y => mins(y.leave)).join(", ");
+    const x = r.catchable[0], later = r.catchable.slice(1, 3).map(y => y.leave < 60 ? "now" : mins(y.leave)).join(", ");
     return `<div class="H-route"><div class="H-dot" style="background:${r.color}">${r.o.route}</div>
       <div>${r.o.station}<small>to ${x.terminal}${later ? ` · then ${later}` : ""}</small></div>
       <div class="when">${x.leave < 60 ? "now" : `in ${mins(x.leave)}`}</div></div>`;
