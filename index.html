@@ -174,7 +174,7 @@
   <header>
     <div class="tess" data-tess aria-hidden="true"></div>
     <div class="L-top" style="margin-top: 12px">
-      <div class="views" role="group" aria-label="View"><button type="button" data-view="trains">Trains</button><button type="button" data-view="tmpl">Time to TMPL</button></div>
+      <div class="views" role="group" aria-label="View"><button type="button" data-view="trains">Trains</button><button type="button" data-view="tmpl">TMPL</button><button type="button" data-view="grocery">Groceries</button></div>
       <span class="L-spacer"></span>
       <span class="L-wx" id="L-wx"></span>
       <span class="L-clock" id="L-clock"></span>
@@ -206,7 +206,7 @@
   <header class="H-top">
     <span class="day" id="H-day"></span>
     <span id="H-clock"></span>
-    <span class="views" role="group" aria-label="View"><button type="button" data-view="trains">Trains</button><button type="button" data-view="tmpl">TMPL</button></span>
+    <span class="views" role="group" aria-label="View"><button type="button" data-view="trains">Trains</button><button type="button" data-view="tmpl">TMPL</button><button type="button" data-view="grocery">Food</button></span>
   </header>
   <div class="H-main">
     <div class="H-col">
@@ -235,7 +235,7 @@
 <script src="data.js?v=10"></script>
 <script src="scene.js?v=10"></script>
 <script src="fx.js?v=10"></script>
-<script src="tmpl.js?v=12"></script>
+<script src="tmpl.js?v=14"></script>
 <script>
 // ---------- themes: line → neighborhood → neighborhood at night ----------
 const THEMES = ["line", "hood", "night"];
@@ -244,7 +244,8 @@ const ROUTE_COLOR = { M: "#FF6319", J: "#996633", Z: "#996633", L: "#A7A9AC" };
 let view = "trains";
 try { view = localStorage.getItem("otd-view") || "trains"; } catch (e) {}
 const qv = new URLSearchParams(location.search).get("view");
-if (qv === "tmpl" || qv === "trains") view = qv;
+if (["trains", "tmpl", "grocery"].includes(qv)) view = qv;
+if (!["trains", "tmpl", "grocery"].includes(view)) view = "trains";
 document.querySelectorAll("[data-view]").forEach(b => b.addEventListener("click", () => {
   view = b.dataset.view;
   try { localStorage.setItem("otd-view", view); } catch (e) {}
@@ -310,7 +311,8 @@ function mosaicRail(color, seed) {
 }
 // station tablets: each stop has its own colors
 const TABLETS = { "Central Av": ["#7A2E2A", "#C08A2E"], "Myrtle Av–Broadway": ["#24427A", "#C08A2E"], "Jefferson St": ["#2F6B5E", "#7A2E2A"], "Morgan Av": ["#8A5A1E", "#24427A"],
-  "Astor Place": ["#24427A", "#7A2E2A"], "Hell's Kitchen": ["#2F6B5E", "#C08A2E"], "West Village": ["#7A2E2A", "#2F6B5E"], "Avenue A": ["#8A5A1E", "#2F6B5E"], "Lexington": ["#24427A", "#C08A2E"] };
+  "Astor Place": ["#24427A", "#7A2E2A"], "Hell's Kitchen": ["#2F6B5E", "#C08A2E"], "West Village": ["#7A2E2A", "#2F6B5E"], "Avenue A": ["#8A5A1E", "#2F6B5E"], "Lexington": ["#24427A", "#C08A2E"],
+  "Essex Crossing": ["#7A2E2A", "#C08A2E"], "Lower East Side": ["#24427A", "#C08A2E"], "Williamsburg": ["#2F6B5E", "#C08A2E"] };
 const tablet = name => { const [c, b] = TABLETS[name] || ["#2F6B5E", "#C08A2E"]; return `<span class="tablet" style="--tc:${c};--tb:${b}">${esc(name.toUpperCase())}</span>`; };
 
 // The walk you see is 2 minutes shorter than the walk the math uses. The station feels closer; you still leave on time.
@@ -330,6 +332,17 @@ function model() {
   const status = lastError ? `Can't reach the MTA. Retrying…` : updated ? (age > 120 ? `Data ${Math.round(age / 60)} min old` : `Live · ${Math.round(age)}s ago`) : "";
   const alertRoutes = new Set(alerts.filter(a => a.active).flatMap(a => a.routes || []));
   return { now, rows, best: rows[0], pack, alerts, alertRoutes, sky: skyLine(now), status };
+}
+
+// ---------- destinations (TMPL, groceries) ----------
+const DEST_VIEWS = {
+  tmpl:    { title: "Time to TMPL", quest: "Side quest", showName: true,  times: (rows, now) => tmplTimes(rows, now) },
+  grocery: { title: "Groceries",    quest: "Errand",     showName: true,  times: (rows, now) => destTimes(GROCERIES, rows, now, 0) },
+};
+function howTo(b, short) {
+  if (b.walkOnly) return "walk from home";
+  const leave = b.leave < 60 ? "leave now" : `leave in ${mins(b.leave)}`;
+  return short ? `${b.route} from ${b.from}, off at ${b.exit}` : `<b>${b.route}</b> from ${b.from} · ${leave} · off at ${b.exit}`;
 }
 
 // ---------- LINE render ----------
@@ -383,17 +396,17 @@ function renderLine(m) {
       el.querySelector(".L-next").innerHTML = `${later ? `<span class="L-then">then ${later} min</span> · ` : ""}to ${esc(x.terminal)}`;
     });
   }
-  const tm = view === "tmpl";
+  const tm = view !== "trains";
   document.querySelector(".L-plaque").hidden = tm;
   map.hidden = tm;
   const tEl = document.getElementById("L-tmpl");
   tEl.hidden = !tm;
   if (tm) {
-    const clubs = tmplTimes(m.rows, m.now);
-    tEl.innerHTML = `<div class="sign"><span class="arrow">→</span>Time to TMPL · you could be…</div>` + clubs.map((c, n) => c.best ? `<div class="T-row${n === 0 ? " top" : ""}">
+    const D = DEST_VIEWS[view], clubs = D.times(m.rows, m.now);
+    tEl.innerHTML = `<div class="sign"><span class="arrow">→</span>${D.title} · you could be…</div>` + clubs.map((c, n) => c.best ? `<div class="T-row${n === 0 ? " top" : ""}">
         <div class="T-min">${c.mins}<small>min</small></div>
         <div><div class="T-doing">${c.doing}</div><div class="T-club">${tablet(c.name)}</div>
-        <div class="T-how"><b>${c.best.route}</b> from ${c.best.from} · ${c.best.leave < 60 ? "leave now" : `leave in ${mins(c.best.leave)}`} · off at ${c.best.exit}</div></div>
+        <div class="T-how">${howTo(c.best)}</div></div>
       </div>` : `<div class="T-row"><div class="T-min">–</div><div><div class="T-doing">${c.doing}</div><div class="T-club">${c.name.toUpperCase()}</div><div class="T-how">No live route right now</div></div></div>`).join("");
   }
   document.querySelectorAll("[data-view]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.view === view)));
@@ -436,13 +449,13 @@ function renderHood(m) {
       <div>${r.o.station}<small>${shownWalk(r.o.walk)} min walk${later ? ` · then ${later}` : ""} · to ${x.terminal}</small></div>
       <div class="when">${x.leave < 60 ? "now" : `in ${mins(x.leave)}`}</div></div>`;
   }).join("") || `<div class="H-item"><span>Nothing else coming.</span></div>`;
-  document.getElementById("H-routes-label").textContent = view === "tmpl" ? "TIME TO TMPL" : "OTHER ROUTES";
-  if (view === "tmpl") {
-    const clubs = tmplTimes(m.rows, m.now);
+  document.getElementById("H-routes-label").textContent = view === "trains" ? "OTHER ROUTES" : DEST_VIEWS[view].title.toUpperCase();
+  if (view !== "trains") {
+    const D = DEST_VIEWS[view], clubs = D.times(m.rows, m.now);
     const top = clubs[0];
-    if (top && top.best) qEl.innerHTML = `Side quest: you could be ${top.doing} at <b>${top.name}</b> in <em>${top.mins} min</em>. Take the ${top.best.route} from ${top.best.from}${top.best.leave < 60 ? ", leaving now" : `, leave in ${mins(top.best.leave)}`}.`;
+    if (top && top.best) qEl.innerHTML = `${D.quest}: you could be ${top.doing}${D.showName && view === "grocery" ? " in " + top.name : ""} in <em>${top.mins} min</em>. ${top.best.walkOnly ? "Just walk it." : `Take the ${top.best.route} from ${top.best.from}${top.best.leave < 60 ? ", leaving now" : `, leave in ${mins(top.best.leave)}`}.`}`;
     document.getElementById("H-routes").innerHTML = clubs.map(c => `<div class="H-tmpl"><div class="n">${c.best ? c.mins : "–"}<small>min</small></div>
-      <div>${c.doing} · ${c.name}<small>${c.best ? `${c.best.route} from ${c.best.from}, off at ${c.best.exit}` : "no live route right now"}</small></div></div>`).join("");
+      <div>${c.doing}${D.showName ? " · " + c.name : ""}<small>${c.best ? howTo(c.best, true) : "no live route right now"}</small></div></div>`).join("");
   }
   document.querySelectorAll("[data-view]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.view === view)));
   document.getElementById("H-notices").hidden = !m.alerts.length;
