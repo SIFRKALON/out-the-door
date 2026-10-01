@@ -4,321 +4,324 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Out the Door">
 <title>Out the Door</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&family=Archivo+Narrow:wght@500;600&family=Cinzel:wght@500;700&family=Pixelify+Sans:wght@400;600&family=VT323&display=swap">
 <style>
-  :root { --bg: #fff; --fg: #000; --muted: #666; --line: #ddd; color-scheme: light dark; }
-  @media (prefers-color-scheme: dark) { :root { --bg: #000; --fg: #fff; --muted: #999; --line: #333; } }
-  body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.35 system-ui, -apple-system, Helvetica, Arial, sans-serif;
-         padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom)); }
-  h1 { font-size: 15px; font-weight: 600; margin: 0 0 12px; display: flex; justify-content: space-between; color: var(--muted); }
-  .opt { padding: 14px 0; border-top: 1px solid var(--line); }
-  .leave { font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; }
-  .opt.first .leave { font-size: 44px; }
-  .what { font-size: 17px; }
-  .meta, .later { color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
-  .none { color: var(--muted); }
-  #sky { color: var(--muted); font-size: 14px; margin: -6px 0 12px; }
-  #sky:empty { display: none; }
-  #alerts { display: grid; gap: 8px; margin-bottom: 8px; }
-  #alerts:empty { display: none; }
-  .alert { border: 2px dashed var(--fg); padding: 10px 12px; font-size: 15px; }
-  .alert small { display: block; color: var(--muted); font-size: 13px; margin-bottom: 2px; }
-  #weather { display: grid; gap: 8px; margin-bottom: 14px; }
-  #weather:empty { display: none; }
-  .warn { border: 2px solid var(--fg); padding: 10px 12px; }
-  .warn b { display: block; font-size: 18px; }
-  .warn span { color: var(--muted); font-size: 14px; }
-  #status { margin-top: 12px; color: var(--muted); font-size: 13px; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body { -webkit-font-smoothing: antialiased; }
+  button { font: inherit; cursor: pointer; }
+  [hidden] { display: none !important; }
+
+  /* ================= LINE (line map + mosaic) ================= */
+  body.t-line {
+    background-color: #F1EEE6; color: #1B1C1A; font-family: "Archivo", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    background-image: linear-gradient(#DDD6C7 1px, transparent 1px), linear-gradient(90deg, #DDD6C7 1px, transparent 1px);
+    background-size: 48px 24px, 48px 48px;
+  }
+  .L { grid-template-columns: minmax(0, 1fr); max-width: 1180px; margin: 0 auto; padding: max(16px, env(safe-area-inset-top)) 16px max(20px, env(safe-area-inset-bottom)); display: grid; gap: 18px; }
+  .tess { display: flex; height: 10px; overflow: hidden; }
+  .tess i { flex: 0 0 10px; height: 10px; margin-right: 2px; }
+  .L-top { display: flex; align-items: center; gap: 12px; }
+  .L-brand { font-family: "Cinzel", Georgia, serif; font-weight: 700; letter-spacing: 4px; font-size: 15px; flex: 1; }
+  .L-clock { font-weight: 600; font-variant-numeric: tabular-nums; color: #55584F; }
+  .toggle { border: 2px solid currentColor; background: transparent; color: inherit; padding: 6px 12px; min-height: 40px; border-radius: 999px; font-size: 14px; font-weight: 600; }
+  .L-main { display: grid; gap: 18px; }
+  @media (min-width: 900px) { .L-main { grid-template-columns: 380px 1fr; align-items: start; } }
+  .L-plaque { background: #F8F5EE; border: 10px solid #7A2E2A; outline: 3px solid #C08A2E; outline-offset: -17px; padding: 26px 18px 22px; text-align: center; }
+  .L-cap { font-family: "Cinzel", Georgia, serif; letter-spacing: 6px; font-size: 14px; color: #2F6B5E; }
+  .L-big { font-weight: 800; font-size: clamp(96px, 26vw, 150px); line-height: 0.9; letter-spacing: -5px; color: #24427A; font-variant-numeric: tabular-nums; margin: 6px 0; }
+  .L-big.now { font-size: clamp(64px, 18vw, 96px); letter-spacing: -2px; color: #7A2E2A; }
+  .L-what { margin-top: 14px; font-size: 18px; line-height: 1.35; }
+  .L-what b { font-weight: 800; }
+  .L-sub { color: #55584F; font-family: "Archivo Narrow", sans-serif; font-size: 15px; margin-top: 4px; }
+  .L-side { display: grid; gap: 12px; }
+  .L-note { background: #F8F5EE; border: 2px solid #C08A2E; padding: 10px 14px; }
+  .L-note b { display: block; font-size: 16px; }
+  .L-note span { font-family: "Archivo Narrow", sans-serif; font-size: 14px; color: #55584F; }
+  .L-alert { background: #24427A; color: #F8F5EE; border: 3px solid #F8F5EE; outline: 2px solid #24427A; padding: 10px 14px; font-size: 15px; line-height: 1.35; }
+  .L-alert small { display: block; font-family: "Cinzel", serif; letter-spacing: 3px; font-size: 11px; opacity: 0.85; margin-bottom: 3px; }
+  .L-map { background: #F8F5EE; border: 2px solid #1B1C1A; padding: 8px 18px; }
+  .L-row { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 14px 0; border-bottom: 1px solid #E2DCCD; }
+  .L-row:last-child { border-bottom: 0; }
+  @media (max-width: 600px) {
+    .L-row { grid-template-columns: 36px minmax(0, 1fr); grid-template-areas: "b i" "t t"; row-gap: 8px; }
+    .L-row .bullet { grid-area: b; } .L-row .L-info { grid-area: i; text-align: left; } .L-row .L-track { grid-area: t; }
+  }
+  .bullet { width: 34px; height: 34px; border-radius: 50%; color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 18px; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
+  .L-track { position: relative; height: 34px; min-width: 60px; }
+  .L-main > *, .H-main > * { min-width: 0; }
+  .L-track .rail { position: absolute; left: 0; right: 14px; top: 14px; height: 6px; border-radius: 3px; }
+  .L-track .stn { position: absolute; right: 0; top: 6px; width: 22px; height: 22px; border-radius: 50%; background: #F8F5EE; border: 5px solid #1B1C1A; }
+  .L-track .car { position: absolute; top: 8px; width: 28px; height: 18px; border-radius: 5px; background: #1B1C1A; transition: left 1s linear; }
+  .L-track .car::after { content: ""; position: absolute; left: 4px; right: 4px; top: 5px; height: 4px; background: #F1D48A; border-radius: 1px; }
+  .L-row.go .stn { animation: pulse 1.2s ease-in-out infinite; }
+  @keyframes pulse { 50% { box-shadow: 0 0 0 7px rgba(122,46,42,0.25); } }
+  .L-info { text-align: right; min-width: 118px; }
+  .L-leave { font-weight: 800; font-size: 20px; font-variant-numeric: tabular-nums; }
+  .L-stn { font-family: "Cinzel", Georgia, serif; font-size: 12px; letter-spacing: 2px; color: #2F6B5E; margin-top: 2px; }
+  .L-next { font-family: "Archivo Narrow", sans-serif; font-size: 13px; color: #6B6E68; }
+  .L-foot { display: flex; flex-wrap: wrap; gap: 6px 18px; justify-content: space-between; font-family: "Archivo Narrow", sans-serif; font-size: 14px; color: #55584F; }
+  .L-empty { padding: 18px 0; color: #55584F; }
+
+  /* ================= NEIGHBORHOOD (pixel, Gotham-amber nights) ================= */
+  body.t-hood { background: #12101F; color: #F4EBD0; font-family: "VT323", "Courier New", monospace; }
+  .H { grid-template-columns: minmax(0, 1fr); max-width: 1180px; margin: 0 auto; padding: max(14px, env(safe-area-inset-top)) 14px max(20px, env(safe-area-inset-bottom)); display: grid; gap: 16px; }
+  .H-top { display: flex; align-items: center; gap: 12px; font-size: 22px; }
+  .H-top .day { flex: 1; color: #C9BCA0; }
+  .H-top .toggle { font-family: "Pixelify Sans", sans-serif; border-radius: 0; border-color: #FFC966; color: #FFC966; font-size: 14px; }
+  .H-main { display: grid; gap: 16px; }
+  @media (min-width: 900px) { .H-main { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); align-items: start; } }
+  .H-scene { display: block; width: 100%; height: auto; image-rendering: pixelated; image-rendering: crisp-edges; box-shadow: 0 0 0 4px #0A0914, 0 0 0 8px #5E3B26; background: #0B0F1F; }
+  .H-box { background: #F4EBD0; color: #1E1A2E; padding: 14px 16px; box-shadow: 0 0 0 4px #1E1A2E, 0 0 0 8px #F4EBD0; margin: 8px; }
+  .H-label { font-family: "Pixelify Sans", sans-serif; font-weight: 600; font-size: 15px; letter-spacing: 1px; color: #7A4E2D; }
+  .H-quest { font-size: 32px; line-height: 1.02; margin-top: 4px; }
+  .H-quest em { font-style: normal; color: #B5402B; }
+  .H-col { display: grid; gap: 14px; }
+  .H-panel { background: #1E1A33; padding: 12px 14px; box-shadow: 0 0 0 3px #0A0914; }
+  .H-panel .H-label { color: #FFC966; margin-bottom: 6px; }
+  .H-item { font-size: 22px; line-height: 1.1; padding: 3px 0; }
+  .H-item span { color: #B9AFCF; }
+  .H-route { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; gap: 10px; align-items: center; font-size: 22px; padding: 4px 0; }
+  .H-dot { width: 22px; height: 22px; display: grid; place-items: center; color: #fff; font-family: "Pixelify Sans", sans-serif; font-size: 14px; font-weight: 600; clip-path: polygon(30% 0, 70% 0, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0 70%, 0 30%); }
+  .H-route .when { color: #FFC966; text-align: right; }
+  .H-route small { display: block; color: #9C92B5; font-size: 18px; }
+  .H-flyer { background: #F4F1EA; color: #161616; padding: 10px 12px; font-size: 20px; line-height: 1.05; position: relative; box-shadow: 3px 3px 0 #0A0914; }
+  .H-flyer:nth-child(odd) { transform: rotate(-1deg); }
+  .H-flyer:nth-child(even) { transform: rotate(0.8deg); }
+  .H-flyer::before { content: ""; position: absolute; top: -6px; left: 40%; width: 46px; height: 12px; background: rgba(255, 232, 0, 0.75); }
+  .H-flyer small { display: block; font-family: "Pixelify Sans", sans-serif; font-size: 12px; color: #D6338F; letter-spacing: 1px; }
+  .H-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; font-size: 20px; color: #9C92B5; }
+  .H-made { font-family: "Pixelify Sans", sans-serif; background: #FFC966; color: #1E1A2E; border: 0; padding: 8px 14px; min-height: 40px; box-shadow: 0 4px 0 #A9772B; }
+  .H-made:active { transform: translateY(3px); box-shadow: 0 1px 0 #A9772B; }
+
+  :focus-visible { outline: 3px solid #FFC966; outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { .L-track .car { transition: none; } .L-row.go .stn { animation: none; } }
 </style>
 </head>
-<body>
-<h1><span>Out the Door</span><span id="clock"></span></h1>
-<div id="sky"></div>
-<div id="alerts"></div>
-<div id="weather"></div>
-<div id="list"><div class="none">Loading trains…</div></div>
-<div id="status"></div>
+<body class="t-line">
+
+<!-- ============ LINE ============ -->
+<div class="L" id="ui-line">
+  <header>
+    <div class="tess" id="L-tess" aria-hidden="true"></div>
+    <div class="L-top" style="margin-top: 10px">
+      <span class="L-brand">OUT THE DOOR</span>
+      <span class="L-clock" id="L-clock"></span>
+      <button class="toggle" type="button" data-toggle>Neighborhood</button>
+    </div>
+  </header>
+  <div class="L-main">
+    <div class="L-side">
+      <section class="L-plaque" aria-live="polite">
+        <div class="L-cap" id="L-cap1">LEAVE IN</div>
+        <div class="L-big" id="L-big">–</div>
+        <div class="L-cap" id="L-cap2">MINUTES</div>
+        <div class="L-what" id="L-what">Listening for trains…</div>
+        <div class="L-sub" id="L-sub"></div>
+      </section>
+      <div id="L-pack" class="L-side"></div>
+      <div id="L-alerts" class="L-side"></div>
+    </div>
+    <section class="L-map" id="L-map" aria-label="All train options"></section>
+  </div>
+  <footer class="L-foot"><span id="L-sky"></span><span id="L-status"></span></footer>
+</div>
+
+<!-- ============ NEIGHBORHOOD ============ -->
+<div class="H" id="ui-hood" hidden>
+  <header class="H-top">
+    <span class="day" id="H-day"></span>
+    <span id="H-clock"></span>
+    <button class="toggle" type="button" data-toggle>Night</button>
+  </header>
+  <div class="H-main">
+    <div class="H-col">
+      <canvas class="H-scene" id="H-scene" width="192" height="108" role="img" aria-label="Pixel street: your building, the elevated M, Central Av station"></canvas>
+      <section class="H-box" aria-live="polite">
+        <div class="H-label">QUEST · INTO THE CITY</div>
+        <div class="H-quest" id="H-quest">Listening for trains…</div>
+      </section>
+    </div>
+    <div class="H-col">
+      <section class="H-panel" id="H-pack" hidden><div class="H-label">PACK</div><div id="H-pack-items"></div></section>
+      <section class="H-panel"><div class="H-label">OTHER ROUTES</div><div id="H-routes"></div></section>
+      <section class="H-col" id="H-alerts"></section>
+      <footer class="H-foot">
+        <button class="H-made" type="button" id="H-made">I made it out</button>
+        <span id="H-streak"></span>
+        <span id="H-sky"></span>
+        <span id="H-status"></span>
+      </footer>
+    </div>
+  </div>
+</div>
 
 <script src="suncalc.js"></script>
+<script src="data.js"></script>
+<script src="scene.js"></script>
 <script>
-// ---------- settings ----------
-const BUFFER_MIN = 1;                      // extra slack on top of the walk
-const REFRESH_SEC = 30;                    // how often to pull the MTA feeds
-const FEED = "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2F";
+// ---------- themes: line → neighborhood → neighborhood at night ----------
+const THEMES = ["line", "hood", "night"];
+const NEXT_LABEL = { line: "Neighborhood", hood: "Night", night: "Line map" };
+const ROUTE_COLOR = { M: "#FF6319", J: "#996633", Z: "#996633", L: "#A7A9AC" };
+let theme = "line";
+try { theme = localStorage.getItem("otd-theme") || "line"; } catch (e) {}
+const q = new URLSearchParams(location.search).get("theme");
+if (THEMES.includes(q)) theme = q;
+if (!THEMES.includes(theme)) theme = "line";
 
-// Walk times from home (Google Maps, walking).
-// toward = any Manhattan stop on that line; a train counts only if it reaches it after your station.
-const OPTIONS = [
-  { route: "M", feed: "gtfs-bdfm", stop: "M10", station: "Central Av",          walk: 5,  toward: "M18" },
-  { route: "M", feed: "gtfs-bdfm", stop: "M11", station: "Myrtle Av–Broadway", walk: 11, toward: "M18" },
-  { route: "J", feed: "gtfs-jz",   stop: "M11", station: "Myrtle Av–Broadway", walk: 11, toward: "M18" },
-  { route: "Z", feed: "gtfs-jz",   stop: "M11", station: "Myrtle Av–Broadway", walk: 11, toward: "M18" },
-  { route: "L", feed: "gtfs-l",    stop: "L15", station: "Jefferson St",       walk: 13, toward: "L06" },
-  { route: "L", feed: "gtfs-l",    stop: "L14", station: "Morgan Av",          walk: 13, toward: "L06" },
-];
-
-// Where trains end up (last stop of the trip) -> readable name.
-const TERMINALS = {
-  L01: "8 Av", L03: "Union Sq", G08: "Forest Hills–71 Av", M23: "Broad St", M22: "Fulton St",
-  M21: "Chambers St", M18: "Delancey St–Essex St", D15: "47–50 Sts", B08: "Lexington Av/63 St",
-  Q05: "96 St", D14: "7 Av", G21: "Queens Plaza", M19: "Bowery", M20: "Canal St",
-};
-
-// ---------- minimal GTFS-realtime protobuf reader ----------
-const td = new TextDecoder();
-function fields(buf, s = 0, e = buf.length) {
-  const out = []; let i = s;
-  const varint = () => { let r = 0, m = 1, b; do { b = buf[i++]; r += (b & 127) * m; m *= 128; } while (b & 128); return r; };
-  while (i < e) {
-    const k = varint(), f = Math.floor(k / 8), w = k & 7;
-    if (w === 0) out.push([f, varint()]);
-    else if (w === 2) { const L = varint(); out.push([f, [i, i + L]]); i += L; }
-    else if (w === 1) i += 8; else if (w === 5) i += 4; else break;
-  }
-  return out;
+function applyTheme() {
+  const isLine = theme === "line";
+  document.body.className = isLine ? "t-line" : "t-hood";
+  document.getElementById("ui-line").hidden = !isLine;
+  document.getElementById("ui-hood").hidden = isLine;
+  document.querySelectorAll("[data-toggle]").forEach(b => b.textContent = NEXT_LABEL[theme]);
+  document.querySelector('meta[name="theme-color"]')?.remove();
+  if (isLine) Scene.unmount(); else Scene.mount(document.getElementById("H-scene"));
+  render();
 }
-function parseFeed(buf) {
-  const trips = [];
-  for (const [f, v] of fields(buf)) {
-    if (f !== 2) continue;                                   // FeedMessage.entity
-    let tu = null;
-    for (const [f2, v2] of fields(buf, ...v)) if (f2 === 3) tu = v2;   // trip_update
-    if (!tu) continue;
-    let route = ""; const stops = [];
-    for (const [f3, v3] of fields(buf, ...tu)) {
-      if (f3 === 1) for (const [a, b] of fields(buf, ...v3)) if (a === 5) route = td.decode(buf.subarray(...b));
-      if (f3 === 2) {
-        let id = "", t = 0;
-        for (const [a, b] of fields(buf, ...v3)) {
-          if (a === 4) id = td.decode(buf.subarray(...b));
-          if ((a === 2 || a === 3) && !t) for (const [c, d] of fields(buf, ...b)) if (c === 2) t = d;
-        }
-        stops.push([id.slice(0, 3), t]);
-      }
-    }
-    trips.push({ route, stops });
-  }
-  return trips;
-}
+document.querySelectorAll("[data-toggle]").forEach(b => b.addEventListener("click", () => {
+  theme = THEMES[(THEMES.indexOf(theme) + 1) % THEMES.length];
+  try { localStorage.setItem("otd-theme", theme); } catch (e) {}
+  applyTheme();
+}));
 
-// ---------- data ----------
-let trains = {};        // option index -> [{t, terminal}]
-let updated = 0, lastError = "";
+// mosaic band
+const TESS = ["#7A2E2A", "#C08A2E", "#2F6B5E", "#24427A"];
+document.getElementById("L-tess").innerHTML = Array.from({ length: 120 }, (_, i) => `<i style="background:${TESS[i % 4]}"></i>`).join("");
 
-async function refresh() {
-  const feeds = {};
-  try {
-    for (const name of new Set(OPTIONS.map(o => o.feed))) {
-      const r = await fetch(FEED + name, { cache: "no-store" });
-      if (!r.ok) throw new Error(`${name}: HTTP ${r.status}`);
-      feeds[name] = parseFeed(new Uint8Array(await r.arrayBuffer()));
-    }
-  } catch (e) { lastError = String(e.message || e); render(); return; }
-
-  const now = Date.now() / 1000, next = {};
-  OPTIONS.forEach((o, i) => {
-    next[i] = [];
-    for (const trip of feeds[o.feed]) {
-      if (trip.route !== o.route) continue;
-      const k = trip.stops.findIndex(s => s[0] === o.stop);
-      if (k < 0 || !trip.stops[k][1] || trip.stops[k][1] < now - 60) continue;
-      if (!trip.stops.slice(k + 1).some(s => s[0] === o.toward)) continue;   // not Manhattan-bound
-      const last = trip.stops[trip.stops.length - 1][0];
-      next[i].push({ t: trip.stops[k][1], terminal: TERMINALS[last] || "Manhattan" });
-    }
-    next[i].sort((a, b) => a.t - b.t);
-  });
-  trains = next; updated = now; lastError = ""; render();
-}
-
-// ---------- weather (Open-Meteo, free, no key) ----------
-const HOME = { lat: 40.70, lon: -73.93 };   // rounded on purpose: neighborhood-level is plenty for weather
-const WEATHER_URL = `https://api.open-meteo.com/v1/forecast?latitude=${HOME.lat}&longitude=${HOME.lon}` +
-  "&hourly=apparent_temperature,precipitation_probability,precipitation,snowfall,wind_gusts_10m,uv_index,weather_code" +
-  "&current=precipitation,weather_code&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch" +
-  "&timezone=America%2FNew_York&past_hours=12&forecast_hours=4&timeformat=unixtime";
-let warnings = [];
-
-// Returns only things worth acting on in the next ~3 hours. Empty list = nothing to show.
-function weatherWarnings(w, now) {
-  const h = w.hourly, out = [];
-  const idx = h.time.map((t, i) => i);
-  const ahead = idx.filter(i => h.time[i] + 3600 > now && h.time[i] <= now + 3 * 3600);
-  const past = idx.filter(i => h.time[i] + 3600 <= now);
-  if (!ahead.length) return out;
-  const max = k => Math.max(...ahead.map(i => h[k][i] ?? 0));
-  const min = k => Math.min(...ahead.map(i => h[k][i] ?? 0));
-  const sum = (k, set) => set.reduce((a, i) => a + (h[k][i] ?? 0), 0);
-  const firstHour = test => { const i = ahead.find(test); return i === undefined ? "" : hm(Math.max(h.time[i], now)); };
-
-  // Storms / rain / snow
-  const storm = ahead.some(i => h.weather_code[i] >= 95);
-  const rainingNow = (w.current?.precipitation ?? 0) > 0;
-  const rainSoon = max("precipitation_probability") >= 40 || sum("precipitation", ahead) >= 0.02;
-  if (sum("snowfall", ahead) > 0) out.push(["Snow: wear boots", `About ${sum("snowfall", ahead).toFixed(1)} in expected by ${hm(now + 3 * 3600)}`]);
-  if (storm) out.push(["Thunderstorms possible", `Starting around ${firstHour(i => h.weather_code[i] >= 95)}. Umbrella, and maybe wait it out`]);
-  else if (rainingNow) out.push(["Raining now: umbrella", `${max("precipitation_probability")}% chance it keeps going`]);
-  else if (rainSoon) out.push(["Bring an umbrella", `${max("precipitation_probability")}% chance of rain, from about ${firstHour(i => h.precipitation_probability[i] >= 40 || h.precipitation[i] > 0)}`]);
-
-  // Puddles from earlier rain
-  const fell = sum("precipitation", past);
-  if (!rainSoon && !rainingNow && fell >= 0.15) out.push(["Wet streets: waterproof shoes", `${fell.toFixed(2)} in of rain in the last 12 hours`]);
-
-  // Temperature (feels-like)
-  const lo = Math.round(min("apparent_temperature")), hi = Math.round(max("apparent_temperature"));
-  if (lo <= 32) out.push(["Freezing: coat, hat, gloves", `Feels like ${lo}°F`]);
-  else if (lo <= 45) out.push(["Cold: warm coat", `Feels like ${lo}°F`]);
-  else if (lo <= 55) out.push(["Cool: bring a jacket", `Feels like ${lo}°F`]);
-  if (hi >= 90) out.push(["Very hot: water and light clothes", `Feels like ${hi}°F`]);
-  else if (hi >= 84) out.push(["Hot: dress light, bring water", `Feels like ${hi}°F`]);
-  const nowFeel = h.apparent_temperature[ahead[0]];
-  if (lo > 55 && nowFeel - lo >= 12) out.push(["Getting colder: bring a layer", `Drops from ${Math.round(nowFeel)}°F to ${lo}°F`]);
-
-  // Wind and sun
-  const gust = Math.round(max("wind_gusts_10m"));
-  if (gust >= 30) out.push(["Windy", `Gusts up to ${gust} mph${rainSoon ? ". Umbrellas will struggle" : ""}`]);
-  if (max("uv_index") >= 7) out.push(["Strong sun: sunscreen", `UV index ${Math.round(max("uv_index"))}`]);
-  return out;
-}
-
-// ---------- air quality (Open-Meteo, US AQI) ----------
-const AIR_URL = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${HOME.lat}&longitude=${HOME.lon}` +
-  "&hourly=us_aqi&forecast_hours=4&timeformat=unixtime&timezone=America%2FNew_York";
-let airWarnings = [];
-
-function airQualityWarnings(a, now) {
-  const vals = a.hourly.time.map((t, i) => [t, a.hourly.us_aqi[i]])
-    .filter(([t, v]) => v != null && t + 3600 > now && t <= now + 3 * 3600).map(([, v]) => v);
-  if (!vals.length) return [];
-  const aqi = Math.round(Math.max(...vals));
-  if (aqi >= 201) return [["Very unhealthy air: stay in or wear an N95", `Air quality index ${aqi}`]];
-  if (aqi >= 151) return [["Unhealthy air: consider a mask", `Air quality index ${aqi}`]];
-  if (aqi >= 101) return [["Poor air quality", `Air quality index ${aqi}. Unhealthy for sensitive groups`]];
-  return [];
-}
-
-async function refreshWeather() {
+// ---------- shared model ----------
+const mins = s => Math.max(0, Math.floor(s / 60));
+function model() {
   const now = Date.now() / 1000;
-  try { warnings = weatherWarnings(await (await fetch(WEATHER_URL, { cache: "no-store" })).json(), now); } catch (e) {}
-  try { airWarnings = airQualityWarnings(await (await fetch(AIR_URL, { cache: "no-store" })).json(), now); } catch (e) {}
-  render();
+  const rows = OPTIONS.map((o, i) => ({
+    o, i, color: ROUTE_COLOR[o.route] || "#888",
+    catchable: (trains[i] || []).map(x => ({ ...x, leave: x.t - (o.walk + BUFFER_MIN) * 60 - now })).filter(x => x.leave > -30),
+  })).filter(r => r.catchable.length).sort((a, b) => a.catchable[0].leave - b.catchable[0].leave);
+  const pack = [...warnings, ...airWarnings];
+  const age = now - updated;
+  const status = lastError ? `Can't reach the MTA. Retrying…` : updated ? (age > 120 ? `Data ${Math.round(age / 60)} min old` : `Live · ${Math.round(age)}s ago`) : "";
+  return { now, rows, best: rows[0], pack, alerts, sky: skyLine(now), status };
 }
 
-// ---------- MTA service alerts ----------
-const ALERTS_URL = "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/camsys%2Fsubway-alerts.json";
-const MY_ROUTES = new Set(OPTIONS.map(o => o.route));
-// Stops from your stations into Manhattan. Alerts that only touch other stops (e.g. the L in Canarsie) are skipped.
-const RELEVANT_STOPS = new Set([
-  "L01", "L02", "L03", "L05", "L06", "L08", "L10", "L11", "L12", "L13", "L14", "L15",
-  "M10", "M11", "M12", "M13", "M14", "M16", "M18", "M19", "M20", "M21", "M22", "M23",
-  "D21", "D20", "D19", "D18", "D17", "D16", "D15", "F12", "F11",
-]);
-let alerts = [];
-
-const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-function cleanAlertText(t) {
-  return esc(t).replace(/\[[^\]]*icon\]\s*/gi, "").replace(/\[([A-Z0-9])\]/g, "<b>$1</b>").trim();
-}
-
-function serviceAlerts(feed, now) {
-  const seen = new Set(), out = [];
-  for (const e of feed.entity || []) {
-    const a = e.alert; if (!a) continue;
-    const ents = a.informed_entity || [];
-    const routes = [...new Set(ents.map(x => x.route_id).filter(r => MY_ROUTES.has(r)))];
-    if (!routes.length) continue;
-    const stops = ents.map(x => (x.stop_id || "").slice(0, 3)).filter(Boolean);
-    if (stops.length && !stops.some(s => RELEVANT_STOPS.has(s))) continue;
-    const periods = a.active_period || [{}];
-    const active = periods.some(p => (p.start || 0) <= now && (!p.end || p.end >= now));
-    const soon = periods.map(p => p.start).filter(t => t > now && t <= now + 12 * 3600).sort()[0];
-    if (!active && !soon) continue;
-    const text = (a.header_text?.translation || []).find(t => t.language === "en")?.text;
-    if (!text || seen.has(text)) continue;
-    seen.add(text);
-    out.push({ html: cleanAlertText(text), when: active ? "Now" : `From ${hm(soon)}${new Date(soon * 1000).getHours() < 12 ? "am" : "pm"}`,
-               type: a["transit_realtime.mercury_alert"]?.alert_type || "", active });
+// ---------- LINE render ----------
+const TRACK_WINDOW = 15 * 60;   // a car starts its run 15 min before you need to leave
+function renderLine(m) {
+  document.getElementById("L-clock").textContent = hm(m.now);
+  const big = document.getElementById("L-big"), b = m.best;
+  if (!b) {
+    big.textContent = "–"; big.className = "L-big";
+    document.getElementById("L-what").textContent = updated ? "No Manhattan-bound trains you can make right now." : "Listening for trains…";
+    document.getElementById("L-sub").textContent = "";
+  } else {
+    const x = b.catchable[0];
+    const now = x.leave < 60;
+    big.textContent = now ? "NOW" : mins(x.leave); big.className = "L-big" + (now ? " now" : "");
+    document.getElementById("L-cap1").textContent = now ? "TIME TO" : "LEAVE IN";
+    document.getElementById("L-cap2").textContent = now ? "GO" : mins(x.leave) === 1 ? "MINUTE" : "MINUTES";
+    document.getElementById("L-what").innerHTML = `for the <b>${b.o.route}</b> at ${b.o.station}`;
+    document.getElementById("L-sub").textContent = `toward ${x.terminal} · arrives ${hm(x.t)} · ${b.o.walk} min walk`;
   }
-  return out.sort((x, y) => y.active - x.active).slice(0, 5);
+  document.getElementById("L-pack").innerHTML = m.pack.map(([t, d]) => `<div class="L-note"><b>${t}</b><span>${d}</span></div>`).join("");
+  document.getElementById("L-alerts").innerHTML = m.alerts.map(a => `<div class="L-alert"><small>${a.when.toUpperCase()}${a.type ? " · " + esc(a.type).toUpperCase() : ""}</small>${a.html}</div>`).join("");
+
+  const map = document.getElementById("L-map");
+  if (!m.rows.length) { map.innerHTML = `<div class="L-empty">${updated ? "Nothing catchable right now." : "Loading trains…"}</div>`; }
+  else {
+    // keep row elements stable so the cars glide instead of jumping
+    const keys = m.rows.map(r => "r" + r.i);
+    if (map.dataset.keys !== keys.join()) {
+      map.innerHTML = m.rows.map(r => `<div class="L-row" id="L-r${r.i}">
+        <div class="bullet" style="background:${r.color}">${r.o.route}</div>
+        <div class="L-track"><div class="rail" style="background:${r.color}"></div><div class="stn"></div><div class="car"></div></div>
+        <div class="L-info"><div class="L-leave"></div><div class="L-stn">${r.o.station.toUpperCase()}</div><div class="L-next"></div></div>
+      </div>`).join("");
+      map.dataset.keys = keys.join();
+    }
+    m.rows.forEach(r => {
+      const el = document.getElementById("L-r" + r.i), x = r.catchable[0];
+      const p = Math.min(1, Math.max(0, 1 - x.leave / TRACK_WINDOW));
+      const track = el.querySelector(".L-track");
+      el.querySelector(".car").style.left = `${p * Math.max(0, track.clientWidth - 46)}px`;
+      el.classList.toggle("go", x.leave < 60);
+      el.querySelector(".L-leave").textContent = x.leave < 60 ? "Leave now" : `Leave in ${mins(x.leave)}`;
+      const later = r.catchable.slice(1, 3).map(y => mins(y.leave)).join(", ");
+      el.querySelector(".L-next").textContent = `to ${x.terminal}${later ? ` · then ${later} min` : ""}`;
+    });
+  }
+  document.getElementById("L-sky").textContent = m.sky;
+  document.getElementById("L-status").textContent = m.status;
 }
 
-async function refreshAlerts() {
-  try { alerts = serviceAlerts(await (await fetch(ALERTS_URL, { cache: "no-store" })).json(), Date.now() / 1000); } catch (e) {}
+// ---------- NEIGHBORHOOD render ----------
+function streak() {
+  try { return JSON.parse(localStorage.getItem("otd-streak") || "null"); } catch (e) { return null; }
+}
+const dayKey = d => d.toLocaleDateString("en-CA");
+document.getElementById("H-made").addEventListener("click", () => {
+  const today = dayKey(new Date()), yest = dayKey(new Date(Date.now() - 864e5));
+  const s = streak();
+  const next = !s ? { last: today, count: 1 } : s.last === today ? s : { last: today, count: s.last === yest ? s.count + 1 : 1 };
+  try { localStorage.setItem("otd-streak", JSON.stringify(next)); } catch (e) {}
   render();
+});
+
+function renderHood(m) {
+  const d = new Date();
+  document.getElementById("H-day").textContent = d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
+  document.getElementById("H-clock").textContent = hm(m.now);
+  const b = m.best, qEl = document.getElementById("H-quest");
+  if (!b) qEl.textContent = updated ? "No trains you can make right now. Rest a while." : "Listening for trains…";
+  else {
+    const x = b.catchable[0];
+    const take = m.pack.length ? ` ${m.pack[0][0].replace(/:.*/, "")}.` : "";
+    qEl.innerHTML = x.leave < 60
+      ? `Go now! The <b>${b.o.route}</b> reaches ${b.o.station} at ${hm(x.t)}.${take}`
+      : `Leave in <em>${mins(x.leave)} min</em> for the <b>${b.o.route}</b> at ${b.o.station}, toward ${x.terminal}.${take}`;
+  }
+  const pack = document.getElementById("H-pack");
+  pack.hidden = !m.pack.length;
+  document.getElementById("H-pack-items").innerHTML = m.pack.map(([t, dd]) => `<div class="H-item">${t}<br><span>${dd}</span></div>`).join("");
+  document.getElementById("H-routes").innerHTML = m.rows.slice(1).map(r => {
+    const x = r.catchable[0], later = r.catchable.slice(1, 3).map(y => mins(y.leave)).join(", ");
+    return `<div class="H-route"><div class="H-dot" style="background:${r.color}">${r.o.route}</div>
+      <div>${r.o.station}<small>to ${x.terminal}${later ? ` · then ${later}` : ""}</small></div>
+      <div class="when">${x.leave < 60 ? "now" : `in ${mins(x.leave)}`}</div></div>`;
+  }).join("") || `<div class="H-item"><span>Nothing else coming.</span></div>`;
+  document.getElementById("H-alerts").innerHTML = m.alerts.map(a => `<div class="H-flyer"><small>${a.when.toUpperCase()}${a.type ? " · " + esc(a.type).toUpperCase() : ""}</small>${a.html}</div>`).join("");
+  const s = streak();
+  document.getElementById("H-streak").textContent = s ? `Streak: ${s.count} day${s.count === 1 ? "" : "s"}` : "";
+  document.getElementById("H-sky").textContent = m.sky;
+  document.getElementById("H-status").textContent = m.status;
+
+  // scene: the next Manhattan-bound M at Central Av rides the el
+  const central = OPTIONS.findIndex(o => o.stop === "M10");
+  const next = (trains[central] || []).find(x => x.t > m.now - 60);
+  Scene.set({
+    forceNight: theme === "night", lat: HOME.lat, lon: HOME.lon,
+    rain: !!warnings.rain, snow: !!warnings.snow,
+    leaving: !!b && b.catchable[0].leave < 60,
+    train: next ? { secs: next.t - m.now, color: ROUTE_COLOR.M } : null,
+  });
 }
-
-// ---------- sunset and the moon (SunCalc, computed on the device) ----------
-function skyLine(now) {
-  if (!window.SunCalc) return "";
-  const d = new Date(now * 1000), tmr = new Date(d.getTime() + 864e5);
-  const sun = SunCalc.getTimes(d, HOME.lat, HOME.lon);
-  const parts = [];
-  if (d < sun.sunset) parts.push(`Sunset ${hm(sun.sunset / 1000)}`);
-  else parts.push(`Sunrise ${hm(SunCalc.getTimes(tmr, HOME.lat, HOME.lon).sunrise / 1000)}`);
-
-  // Moon only when it's worth looking up: around full moon (moonrise) or new moon (dark sky).
-  const { fraction, phase } = SunCalc.getMoonIllumination(d);
-  if (fraction >= 0.9) {
-    const rises = [SunCalc.getMoonTimes(d, HOME.lat, HOME.lon).rise, SunCalc.getMoonTimes(tmr, HOME.lat, HOME.lon).rise]
-      .filter(r => r && r.getTime() / 1000 > now - 1800);
-    const name = fraction >= 0.98 ? "Full moon" : phase < 0.5 ? "Nearly full moon" : "Just past full moon";
-    if (rises[0] && rises[0].getTime() / 1000 < now + 18 * 3600) parts.push(`${name} rises ${hm(rises[0] / 1000)}`);
-    else parts.push(name);
-  } else if (fraction <= 0.03) parts.push("New moon: darkest skies tonight");
-  return parts.join(" · ");
-}
-
-// ---------- display ----------
-const hm = t => { const d = new Date(t * 1000); return `${d.getHours() % 12 || 12}:${String(d.getMinutes()).padStart(2, "0")}`; };
-const leaveText = s => s < 60 ? "Leave now" : `Leave in ${Math.floor(s / 60)} min`;
 
 function render() {
-  const now = Date.now() / 1000;
-  document.getElementById("clock").textContent = hm(now);
-
-  const rows = OPTIONS.map((o, i) => {
-    const catchable = (trains[i] || [])
-      .map(x => ({ ...x, leave: x.t - (o.walk + BUFFER_MIN) * 60 - now }))
-      .filter(x => x.leave > -30);
-    return { o, catchable };
-  }).filter(r => r.catchable.length)
-    .sort((a, b) => a.catchable[0].leave - b.catchable[0].leave);
-
-  document.getElementById("sky").textContent = skyLine(now);
-  document.getElementById("alerts").innerHTML = alerts.map(a =>
-    `<div class="alert"><small>${a.when}${a.type ? " · " + esc(a.type) : ""}</small>${a.html}</div>`).join("");
-  document.getElementById("weather").innerHTML =
-    [...warnings, ...airWarnings].map(([t, d]) => `<div class="warn"><b>${t}</b><span>${d}</span></div>`).join("");
-
-  const list = document.getElementById("list");
-  if (!rows.length) {
-    list.innerHTML = `<div class="none">${updated ? "No Manhattan-bound trains you can make right now." : "Loading trains…"}</div>`;
-  } else {
-    list.innerHTML = rows.map((r, n) => {
-      const x = r.catchable[0];
-      const later = r.catchable.slice(1, 3).map(y => `${Math.max(0, Math.floor(y.leave / 60))} min`).join(", ");
-      return `<div class="opt${n === 0 ? " first" : ""}">
-        <div class="leave">${leaveText(x.leave)}</div>
-        <div class="what">to catch the <b>${r.o.route}</b> toward ${x.terminal}</div>
-        <div class="meta">${r.o.station} · ${r.o.walk} min walk · train arrives ${hm(x.t)}</div>
-        ${later ? `<div class="later">next: leave in ${later}</div>` : ""}
-      </div>`;
-    }).join("");
-  }
-
-  const age = now - updated;
-  document.getElementById("status").textContent =
-    lastError ? `Can't reach the MTA (${lastError}). Retrying…` :
-    updated ? (age > 120 ? `Data is ${Math.round(age / 60)} min old` : `Live · updated ${Math.round(age)}s ago`) : "";
+  const m = model();
+  if (theme === "line") renderLine(m); else renderHood(m);
 }
 
+applyTheme();
 refresh();
 refreshWeather();
 refreshAlerts();
 setInterval(refresh, REFRESH_SEC * 1000);
-setInterval(refreshAlerts, 2 * 60 * 1000);
 setInterval(refreshWeather, 10 * 60 * 1000);
+setInterval(refreshAlerts, 2 * 60 * 1000);
 setInterval(render, 1000);
 document.addEventListener("visibilitychange", () => { if (!document.hidden) { refresh(); refreshWeather(); refreshAlerts(); } });
 </script>
