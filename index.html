@@ -42,6 +42,7 @@
   .L-head1 { font-weight: 800; font-size: clamp(34px, 9vw, 64px); line-height: 1; letter-spacing: -1.5px; white-space: nowrap; color: #1B1C1A; font-variant-numeric: tabular-nums; }
   .L-head1 em { font-style: normal; color: #24427A; }
   .L-head1.now { color: #7A2E2A; }
+  .L-head1.quiet { white-space: normal; font-size: clamp(26px, 7vw, 40px); }
   .L-what { margin-top: 10px; font-size: 18px; line-height: 1.35; }
   .L-what b { font-weight: 800; }
   .L-sub { color: #55584F; font-family: "Archivo Narrow", sans-serif; font-size: 15px; margin-top: 4px; }
@@ -131,7 +132,7 @@
   <div class="L-main">
     <div class="L-col">
       <section class="L-plaque" aria-live="polite">
-        <div class="L-head1" id="L-head1">Listening for trains…</div>
+        <div class="L-head1 quiet" id="L-head1">Listening for trains…</div>
         <div class="L-what" id="L-what"></div>
         <div class="L-sub" id="L-sub"></div>
       </section>
@@ -174,10 +175,10 @@
   </div>
 </div>
 
-<script src="suncalc.js"></script>
-<script src="data.js"></script>
-<script src="scene.js"></script>
-<script src="fx.js"></script>
+<script src="suncalc.js?v=9"></script>
+<script src="data.js?v=9"></script>
+<script src="scene.js?v=9"></script>
+<script src="fx.js?v=9"></script>
 <script>
 // ---------- themes: line → neighborhood → neighborhood at night ----------
 const THEMES = ["line", "hood", "night"];
@@ -232,7 +233,7 @@ function renderLine(m) {
   document.getElementById("L-clock").textContent = hm(m.now);
   const head = document.getElementById("L-head1"), b = m.best;
   if (!b) {
-    head.textContent = updated ? "No trains right now" : "Listening for trains…"; head.className = "L-head1";
+    head.textContent = updated ? "No trains right now" : "Listening for trains…"; head.className = "L-head1 quiet";
     document.getElementById("L-what").textContent = ""; document.getElementById("L-sub").textContent = "";
   } else {
     const x = b.catchable[0], go = x.leave < 60;
