@@ -10,6 +10,19 @@ const Fx = (() => {
   const drops = Array.from({ length: 260 }, (_, i) => ({ x: R(i + 2000), y: R(i + 3000), v: 0.7 + R(i + 4000) * 0.6, l: 0.6 + R(i + 5000) * 0.8 }));
   const clouds = Array.from({ length: 9 }, (_, i) => ({ x: R(i + 6000), y: 0.04 + R(i + 6100) * 0.42, s: 0.7 + R(i + 6200) * 0.9, v: 0.004 + R(i + 6300) * 0.006 }));
   let flash = 0, nextFlash = 4, moonCanvas = null;
+  // a few loose constellations, placed for the page rather than the real sky (the real ceiling is famously painted backwards too)
+  const CONSTELLATIONS = [
+    [[0.08, 0.10], [0.13, 0.07], [0.19, 0.11], [0.24, 0.08], [0.29, 0.13]],
+    [[0.40, 0.22], [0.45, 0.17], [0.51, 0.20], [0.47, 0.27], [0.40, 0.22]],
+    [[0.62, 0.06], [0.66, 0.12], [0.71, 0.09], [0.77, 0.14]],
+    [[0.12, 0.38], [0.17, 0.33], [0.22, 0.40], [0.18, 0.46]],
+    [[0.70, 0.36], [0.76, 0.31], [0.83, 0.35], [0.88, 0.30], [0.93, 0.34]],
+  ];
+  function sparkle(x, y, r, a) {   // a small four-point gold star
+    ctx.fillStyle = `rgba(240,212,130,${a})`;
+    ctx.beginPath(); ctx.moveTo(x, y - r * 2); ctx.lineTo(x + r * 0.45, y - r * 0.45); ctx.lineTo(x + r * 2, y); ctx.lineTo(x + r * 0.45, y + r * 0.45);
+    ctx.lineTo(x, y + r * 2); ctx.lineTo(x - r * 0.45, y + r * 0.45); ctx.lineTo(x - r * 2, y); ctx.lineTo(x - r * 0.45, y - r * 0.45); ctx.closePath(); ctx.fill();
+  }
 
   function resize() {
     dpr = Math.min(2, window.devicePixelRatio || 1);
@@ -44,7 +57,12 @@ const Fx = (() => {
     ctx.clearRect(0, 0, w, h);
 
     // time of day
-    if (night) { ctx.fillStyle = "rgba(12,16,36,0.78)"; ctx.fillRect(0, 0, w, h); }
+    // night: the Grand Central ceiling. Deep teal, gold stars, faint constellation lines.
+    if (night) {
+      const g = ctx.createLinearGradient(0, 0, 0, h);
+      g.addColorStop(0, "rgba(18,58,60,0.92)"); g.addColorStop(1, "rgba(12,38,42,0.92)");
+      ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+    }
     else if (phase === "dusk" || phase === "golden") {
       const g = ctx.createLinearGradient(0, 0, 0, h);
       g.addColorStop(0, phase === "dusk" ? "rgba(92,72,128,0.55)" : "rgba(255,170,100,0.30)");
@@ -70,7 +88,10 @@ const Fx = (() => {
       ctx.restore();
     }
     if (night && wx.kind !== "fog" && wx.kind !== "cloudy" && wx.kind !== "rain" && wx.kind !== "storm" && wx.kind !== "snow") {
-      stars.forEach(s => { ctx.fillStyle = `rgba(255,244,214,${0.25 + 0.6 * (Math.sin(t * 1.4 + s.p) + 1) / 2 * s.s})`; ctx.fillRect(s.x * w, s.y * h, s.s > 0.8 ? 2 : 1.3, s.s > 0.8 ? 2 : 1.3); });
+      ctx.strokeStyle = "rgba(233,200,106,0.22)"; ctx.lineWidth = 1;
+      CONSTELLATIONS.forEach(c => { ctx.beginPath(); c.forEach(([x, y], i) => i ? ctx.lineTo(x * w, y * h) : ctx.moveTo(x * w, y * h)); ctx.stroke(); });
+      CONSTELLATIONS.flat().forEach(([x, y], i) => sparkle(x * w, y * h, 2.2 + (i % 3), 0.55 + 0.4 * (Math.sin(t * 1.1 + i) + 1) / 2));
+      stars.forEach(s => { ctx.fillStyle = `rgba(233,200,106,${0.2 + 0.55 * (Math.sin(t * 1.4 + s.p) + 1) / 2 * s.s})`; ctx.fillRect(s.x * w, s.y * h, s.s > 0.8 ? 2 : 1.3, s.s > 0.8 ? 2 : 1.3); });
       if (window.SunCalc) {
         const mp = SunCalc.getMoonPosition(now, st.lat, st.lon);
         if (mp.altitude > 0) {
