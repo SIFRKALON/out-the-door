@@ -94,7 +94,7 @@ const Fx = (() => {
       stars.forEach(s => { ctx.fillStyle = `rgba(233,200,106,${0.2 + 0.55 * (Math.sin(t * 1.4 + s.p) + 1) / 2 * s.s})`; ctx.fillRect(s.x * w, s.y * h, s.s > 0.8 ? 2 : 1.3, s.s > 0.8 ? 2 : 1.3); });
       if (window.SunCalc) {
         const mp = SunCalc.getMoonPosition(now, st.lat, st.lon);
-        if (mp.altitude > 0) {
+        if (mp.altitude > 0 && w >= 600) {   // on phones the moon would sit under the header
           const { fraction, phase: mph } = SunCalc.getMoonIllumination(now);
           const mx = w * 0.8, my = h * 0.12, r = 18;
           const g = ctx.createRadialGradient(mx, my, 0, mx, my, 140);

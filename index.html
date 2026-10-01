@@ -22,8 +22,8 @@
     background-color: #F2EFE8; color: #1B1C1A; font-family: "Archivo", "Helvetica Neue", Helvetica, Arial, sans-serif;
   }
   .L { grid-template-columns: minmax(0, 1fr); max-width: 1180px; margin: 0 auto; padding: max(16px, env(safe-area-inset-top)) 16px max(20px, env(safe-area-inset-bottom)); display: grid; gap: 18px; }
-  .tess { display: flex; gap: 2px; height: 7px; overflow: hidden; }
-  .tess i { display: block; height: 7px; flex: none; border-radius: 1px; }
+  .band { display: grid; grid-auto-flow: column; grid-template-rows: repeat(3, 9px); grid-auto-columns: 9px; gap: 1.5px; padding: 1.5px; background: #CFC5B2; overflow: hidden; border-radius: 1px; }
+  .band i { display: block; width: 9px; height: 9px; }
   /* jewel tesserae: gold smalti and teal glass that catch the light now and then */
   /* jewel tesserae: glass and smalti that catch the light. Colors come in as --a (deep), --b (body), --h (highlight). */
   .jw { background: linear-gradient(120deg, var(--a) 0%, var(--b) 30%, var(--h) 47%, var(--b) 57%, var(--a) 100%); background-size: 320% 100%; animation: glint var(--t, 4s) ease-in-out infinite; animation-delay: var(--d, 0s); }
@@ -59,9 +59,10 @@
   .T-how { font-family: "Archivo Narrow", sans-serif; font-size: 14px; color: #55584F; margin-top: 3px; }
   .T-how b { color: #1B1C1A; }
 
-  .L-plaque { position: relative; background: #FBF9F4 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='14'%3E%3Cpath d='M0 0L14 7L28 0M0 7L14 14L28 7' fill='none' stroke='%23CFC5B0' stroke-width='1' opacity='.38'/%3E%3C/svg%3E") 0 0 / 28px 14px; border: 1.5px solid #1B1C1A; padding: 30px 24px 22px; text-align: center; overflow: hidden; }
-  .L-plaque .tess { position: absolute; left: 0; right: 0; top: 0; height: 9px; gap: 2px; padding: 0; }
-  .L-plaque .tess i { height: 9px; border-radius: 0; }
+  .L-plaque { position: relative; background: #F4EFE3; padding: 50px 46px 42px; text-align: center; overflow: hidden; }
+  .L-plaque > canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; }
+  .L-plaque > div { position: relative; z-index: 1; }
+  @media (max-width: 480px) { .L-plaque { padding: 42px 34px 34px; } .L-plaque .L-sub { font-size: 13px; } }
   .L-head1 { font-weight: 800; font-size: clamp(34px, 9vw, 64px); line-height: 1; letter-spacing: -1.5px; white-space: nowrap; color: #1B1C1A; font-variant-numeric: tabular-nums; }
   /* the number, gilded on black glass like an old transom or shop-door numeral */
   .L-head1 em { font-style: normal; display: inline-block; padding: 0.02em 0.22em 0.06em; margin: 0 0.04em; border-radius: 0.12em; vertical-align: 0.02em;
@@ -178,7 +179,7 @@
 <canvas id="L-fx" aria-hidden="true"></canvas>
 <div class="L" id="ui-line">
   <header>
-    <div class="tess" data-tess aria-hidden="true"></div>
+    <div class="band" id="band" aria-hidden="true"></div>
     <div class="L-top" style="margin-top: 12px">
       <div class="views" role="group" aria-label="View"><button type="button" data-view="trains">Trains</button><button type="button" data-view="tmpl">TMPL</button><button type="button" data-view="grocery">Groceries</button></div>
       <span class="L-spacer"></span>
@@ -189,7 +190,7 @@
   <div class="L-main">
     <div class="L-col">
       <section class="L-plaque" aria-live="polite">
-        <div class="tess" data-tess aria-hidden="true"></div>
+        <canvas id="plaque-bg" aria-hidden="true"></canvas>
         <div class="L-head1 quiet" id="L-head1">Listening for trains…</div>
         <div class="L-what" id="L-what"></div>
         <div class="L-sub" id="L-sub"></div>
@@ -240,7 +241,7 @@
 <script src="suncalc.js?v=10"></script>
 <script src="data.js?v=10"></script>
 <script src="scene.js?v=10"></script>
-<script src="fx.js?v=15"></script>
+<script src="fx.js?v=16"></script>
 <script src="tmpl.js?v=14"></script>
 <script>
 // ---------- themes: line → neighborhood → neighborhood at night ----------
@@ -294,15 +295,59 @@ const GOLD = { a: "#7E5E17", b: "#C9A23E", h: "#FFF0B3" }, TEAL = { a: "#0A3F42"
 const jewelOf = c => ({ a: shade(c, -0.4), b: c, h: shade(c, 0.62) });
 // a shimmering piece; t = seconds between glints, d = where in that cycle it starts
 const jewel = (w, j, seed, h = "") => `<i class="jw" style="width:${w}px;${h}--a:${j.a};--b:${j.b};--h:${j.h};--t:${(3 + rnd(seed) * 2.5).toFixed(1)}s;--d:${(rnd(seed * 3 + 1) * -6).toFixed(2)}s"></i>`;
-document.querySelectorAll("[data-tess]").forEach((el, k) => {
-  el.innerHTML = Array.from({ length: 220 }, (_, i) => {
-    const r = rnd(i + k * 500), w = 5 + Math.floor(rnd(i * 3 + k) * 9), seed = i * 11 + k * 7;
-    if (r < 0.07) return jewel(w, GOLD, seed);
-    if (r < 0.12) return jewel(w, TEAL, seed);
-    if (r < 0.19) return jewel(w, jewelOf(STONES[Math.floor(rnd(i + 9) * 4)]), seed);
-    return `<i style="width:${w}px;background:${shade("#D9D0BF", (rnd(i * 7 + k) - 0.5) * 0.18)}"></i>`;
-  }).join("");
-});
+// Tile palette, after the old IRT/BMT walls: brick, ochre, sage, navy on buff.
+const TILE = { grout: "#CFC5B2", field: "#F3EEE2", brick: "#9A3F2C", ochre: "#C08A2E", sage: "#6E8B6A", navy: "#24427A" };
+const tone = (c, i, k = 0.1) => shade(c, (rnd(i) - 0.5) * k);
+
+// top band: three courses. brick, then an ochre/sage checker set with the odd jewel, then navy
+(function buildBand() {
+  let html = "";
+  for (let col = 0; col < 260; col++) for (let row = 0; row < 3; row++) {
+    const i = col * 3 + row;
+    if (row === 1) {
+      const j = rnd(i * 5 + 3);
+      if (j < 0.06) { html += jewel(9, GOLD, i, "height:9px;"); continue; }
+      if (j < 0.10) { html += jewel(9, TEAL, i, "height:9px;"); continue; }
+      html += `<i style="background:${tone(col % 2 ? TILE.ochre : TILE.sage, i)}"></i>`;
+    } else {
+      html += `<i style="background:${tone(row === 0 ? TILE.brick : TILE.navy, i)}"></i>`;
+    }
+  }
+  document.getElementById("band").innerHTML = html;
+})();
+
+// the "Leave in" box as a station name tablet: a field of small white tiles inside three bands, rosettes at the corners
+function paintPlaque() {
+  const cv = document.getElementById("plaque-bg");
+  if (!cv || !cv.parentElement.offsetWidth) return;
+  const W = cv.parentElement.offsetWidth, H = cv.parentElement.offsetHeight, dpr = Math.min(2, devicePixelRatio || 1);
+  cv.width = W * dpr; cv.height = H * dpr;
+  const c = cv.getContext("2d"); c.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const T = W < 480 ? 7.5 : 9, G = 1.5, S = T + G;
+  const cols = Math.floor((W - G) / S), rows = Math.floor((H - G) / S);
+  const ox = (W - cols * S - G) / 2 + G, oy = (H - rows * S - G) / 2 + G;
+  c.fillStyle = TILE.grout; c.fillRect(0, 0, W, H);
+  for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
+    const ring = Math.min(x, y, cols - 1 - x, rows - 1 - y), i = y * 997 + x;
+    const corner = (x < 3 || x > cols - 4) && (y < 3 || y > rows - 4);
+    let col;
+    if (corner) {
+      const cx = x < 3 ? 1 : cols - 2, cy = y < 3 ? 1 : rows - 2;
+      col = x === cx && y === cy ? "#D9B24A" : (Math.abs(x - cx) + Math.abs(y - cy) === 1 ? TILE.brick : TILE.navy);
+    } else if (ring === 0) col = TILE.brick;
+    else if (ring === 1) col = (x + y) % 2 ? TILE.ochre : TILE.sage;
+    else if (ring === 2) col = TILE.navy;
+    else col = TILE.field;
+    c.fillStyle = tone(col, i, ring >= 3 && !corner ? 0.05 : 0.12);
+    c.fillRect(ox + x * S, oy + y * S, T, T);
+  }
+  // soften the grout inside the field so the words sit on calm tile
+  c.fillStyle = "rgba(243,238,226,0.55)";
+  c.fillRect(ox + 3 * S, oy + 3 * S, (cols - 6) * S - G, (rows - 6) * S - G);
+}
+addEventListener("resize", paintPlaque);
+if (window.ResizeObserver) new ResizeObserver(paintPlaque).observe(document.querySelector(".L-plaque"));
+
 function mosaicRail(color, seed) {
   let out = "", x = 0;
   for (let i = 0; x < 1000; i++) {
