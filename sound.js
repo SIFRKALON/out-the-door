@@ -1,6 +1,7 @@
 // Sound: a quiet, generated city soundscape. Off until you turn it on (iPhone needs a tap first).
 // - a low warm hum, like the city through a window
 // - now and then an el train rolls by: a swelling rumble with soft clacks over the rail joints
+// - a subway passing underneath: a long, deep rumble you feel through the floor, tuned to the chord
 // - rain or wind when the weather says so; snow muffles everything
 // - a few soft bell tones, tuned to the hour: a bright major chord by day, a hushed one at night
 // - very rarely a far-off two-note horn, softened so it sounds like it's blocks away
@@ -39,7 +40,7 @@ const Sound = (() => {
     g.gain.linearRampToValueAtTime(0.5, t + dur * 0.45); g.gain.linearRampToValueAtTime(0, t + dur);
     f.frequency.setValueAtTime(90, t); f.frequency.linearRampToValueAtTime(260, t + dur * 0.45); f.frequency.linearRampToValueAtTime(90, t + dur);
     src.connect(f).connect(g).connect(muffle); src.start(t); src.stop(t + dur + 0.1);
-    const low = ac.createOscillator(), lg = ac.createGain(); low.frequency.value = 46;
+    const low = ac.createOscillator(), lg = ac.createGain(); low.frequency.value = st.night ? 49.0 : 65.41;   // G1 at night, C2 by day
     lg.gain.setValueAtTime(0, t); lg.gain.linearRampToValueAtTime(0.10, t + dur * 0.45); lg.gain.linearRampToValueAtTime(0, t + dur);
     low.connect(lg).connect(muffle); low.start(t); low.stop(t + dur + 0.1);
     // clack-clack, clack-clack: pairs of soft thuds, loudest as it passes
@@ -51,6 +52,28 @@ const Sound = (() => {
       const bg = ac.createGain(); bg.gain.setValueAtTime(0.0001, at); bg.gain.exponentialRampToValueAtTime(0.06 * near, at + 0.005); bg.gain.exponentialRampToValueAtTime(0.0001, at + 0.09);
       b.connect(bf).connect(bg).connect(muffle); b.start(at, Math.random() * 3); b.stop(at + 0.12);
     }
+  }
+
+  // a train underneath: rolls in, holds, rolls away (~14 s). Noise for the weight, plus the chord's root and fifth
+  // very low and soft so it hums in tune with the bells instead of droning. Phone speakers lose the deepest part,
+  // so there's an octave-up layer you can actually hear.
+  function underneath() {
+    if (!on) return;
+    const t = ac.currentTime, dur = 12 + Math.random() * 5, peak = dur * (0.35 + Math.random() * 0.2);
+    const env = (param, top) => { param.setValueAtTime(0.0001, t); param.linearRampToValueAtTime(top, t + peak); param.setValueAtTime(top, t + peak + 1.5); param.linearRampToValueAtTime(0.0001, t + dur); };
+    const src = ac.createBufferSource(); src.buffer = noiseBuffer("brown"); src.loop = true;
+    const f = ac.createBiquadFilter(); f.type = "lowpass"; f.Q.value = 0.8;
+    f.frequency.setValueAtTime(70, t); f.frequency.linearRampToValueAtTime(190, t + peak); f.frequency.linearRampToValueAtTime(70, t + dur);
+    const g = ac.createGain(); env(g.gain, 0.42);
+    const wob = ac.createOscillator(), wg = ac.createGain(); wob.frequency.value = 2.3; wg.gain.value = 0.08;   // the wheels' slow throb
+    wob.connect(wg).connect(g.gain);
+    src.connect(f).connect(g).connect(muffle); src.start(t, Math.random() * 3); src.stop(t + dur + 0.2); wob.start(t); wob.stop(t + dur + 0.2);
+    const root = st.night ? 49.0 : 65.41, notes = [[root, 0.07], [root * 1.5, 0.035], [root * 2, 0.03], [root * 3, 0.012]];   // root, fifth, octave, fifth above
+    notes.forEach(([fr, v]) => {
+      const o = ac.createOscillator(), og = ac.createGain(); o.type = "sine"; o.frequency.value = fr;
+      o.detune.setValueAtTime(-12, t); o.detune.linearRampToValueAtTime(8, t + peak); o.detune.linearRampToValueAtTime(-15, t + dur);   // a touch of doppler
+      env(og.gain, v); o.connect(og).connect(muffle); o.start(t); o.stop(t + dur + 0.2);
+    });
   }
 
   // soft bells: three notes of a chord, spaced out, lots of air between them
@@ -109,7 +132,8 @@ const Sound = (() => {
       on = true;
       fade(master.gain, 0.6, 2.5);
       st.applied = false; applyWeather();
-      every(trainBy, 45, 110);
+      every(trainBy, 40, 95);
+      every(underneath, 30, 75);
       every(bells, 25, 60);
       every(horn, 150, 400);
     },
@@ -129,5 +153,6 @@ const Sound = (() => {
     },
     get on() { return on; },
     trainBy() { if (on) trainBy(); },
+    underneath() { if (on) underneath(); },
   };
 })();
