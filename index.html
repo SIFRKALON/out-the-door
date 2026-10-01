@@ -169,6 +169,16 @@
   .H-made { font-family: "Pixelify Sans", sans-serif; background: #FFC966; color: #1E1A2E; border: 0; padding: 8px 14px; min-height: 40px; box-shadow: 0 4px 0 #A9772B; }
   .H-made:active { transform: translateY(3px); box-shadow: 0 1px 0 #A9772B; }
 
+  button.sig { background: none; border: 0; padding: 6px 0; color: inherit; cursor: pointer; }
+  .pretend { position: fixed; left: 50%; bottom: max(12px, env(safe-area-inset-bottom)); transform: translateX(-50%); width: min(560px, calc(100vw - 24px)); max-height: 70vh; overflow: auto; z-index: 50;
+    background: #161616; color: #F4EFE3; border-radius: 14px; padding: 14px 16px 16px; box-shadow: 0 12px 40px rgba(0,0,0,0.35); font-family: "Archivo", Helvetica, Arial, sans-serif; font-size: 14px; }
+  .pr-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; } .pr-head b { flex: 1; font-size: 15px; }
+  .pr-head button { background: none; border: 1px solid #555; color: #F4EFE3; border-radius: 999px; padding: 5px 12px; font-size: 13px; }
+  .pr-group { padding: 8px 0; border-top: 1px solid #2A2A2A; } .pr-group > span { display: block; font-size: 12px; color: #A8A091; margin-bottom: 6px; letter-spacing: 0.5px; }
+  .pr-group > div { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pr-chip { background: #222; color: #F4EFE3; border: 1px solid #3A3A3A; border-radius: 999px; padding: 6px 12px; min-height: 34px; font-size: 13px; }
+  .pr-chip[aria-pressed="true"] { background: #D9B24A; color: #161616; border-color: #D9B24A; font-weight: 700; }
+  .pr-badge { position: fixed; top: max(8px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); z-index: 40; background: #D9B24A; color: #161616; font: 700 12px "Archivo", sans-serif; padding: 5px 12px; border-radius: 999px; box-shadow: 0 4px 14px rgba(0,0,0,0.2); pointer-events: none; }
   :focus-visible { outline: 3px solid #FFC966; outline-offset: 2px; }
   @media (prefers-reduced-motion: reduce) { .L-track .car { transition: none; } .L-row.go .stn { animation: none; } }
 </style>
@@ -204,7 +214,7 @@
     </div>
   </div>
   <footer class="L-foot"><span id="L-sky"></span><span id="L-status"></span>
-    <span class="L-sig"><button class="toggle" type="button" data-toggle>Neighborhood</button><span class="sig">SIFRKALON</span></span>
+    <span class="L-sig"><button class="toggle" type="button" data-toggle>Neighborhood</button><button type="button" class="sig" data-pretend aria-label="Pretend mode">SIFRKALON</button></span>
   </footer>
 </div>
 
@@ -232,11 +242,14 @@
         <span id="H-streak"></span>
         <span id="H-sky"></span>
         <span id="H-status"></span>
-        <span class="H-sig"><button class="toggle" type="button" data-toggle>Night</button><span class="sig">SIFRKALON</span></span>
+        <span class="H-sig"><button class="toggle" type="button" data-toggle>Night</button><button type="button" class="sig" data-pretend aria-label="Pretend mode">SIFRKALON</button></span>
       </footer>
     </div>
   </div>
 </div>
+
+<div class="pretend" id="pretend" hidden></div>
+<div class="pr-badge" id="pr-badge" hidden></div>
 
 <script src="suncalc.js?v=10"></script>
 <script src="data.js?v=10"></script>
@@ -366,6 +379,79 @@ const TABLETS = { "Central Av": ["#7A2E2A", "#C08A2E"], "Myrtle Av–Broadway": 
   "Essex Crossing": ["#7A2E2A", "#C08A2E"], "Lower East Side": ["#24427A", "#C08A2E"], "Williamsburg": ["#2F6B5E", "#C08A2E"] };
 const tablet = name => { const [c, b] = TABLETS[name] || ["#2F6B5E", "#C08A2E"]; return `<span class="tablet" style="--tc:${c};--tb:${b}">${esc(name.toUpperCase())}</span>`; };
 
+// ---------- pretend mode (tap SIFRKALON): preview weather, time of day, moon and other states ----------
+const PRETEND = {};   // sky, temp, time, moon, go, alert, air, wind, uv, puddles
+const PRETEND_OPTIONS = [
+  ["sky",  "Weather", [["sunny", "Sunny"], ["partly", "Partly cloudy"], ["cloudy", "Cloudy"], ["rain", "Rain"], ["heavy", "Downpour"], ["storm", "Storm"], ["snow", "Snow"], ["fog", "Fog"]]],
+  ["temp", "Temperature", [["cold", "Cold"], ["freezing", "Freezing"], ["hot", "Hot"]]],
+  ["time", "Time of day", [["day", "Day"], ["golden", "Golden hour"], ["dusk", "Dusk"], ["night", "Night"]]],
+  ["moon", "Moon", [["full", "Full moon"], ["new", "New moon"]]],
+  ["extra", "Other", [["go", "Time to go"], ["alert", "Service alert"], ["air", "Bad air"], ["wind", "Windy"], ["uv", "Strong sun"], ["puddles", "Wet streets"]]],
+];
+const pretending = () => Object.keys(PRETEND).length > 0;
+
+// Bend SunCalc so every sky (background, pixel scene, sunset line) follows the pretend time and moon.
+if (window.SunCalc) {
+  const SC = { gp: SunCalc.getPosition, gmi: SunCalc.getMoonIllumination, gmp: SunCalc.getMoonPosition, gmt: SunCalc.getMoonTimes };
+  const ALT = { day: 40, golden: 5, dusk: -3, night: -25 };
+  SunCalc.getPosition = (d, a, b) => PRETEND.time ? { altitude: ALT[PRETEND.time] * Math.PI / 180, azimuth: 0.7 } : SC.gp(d, a, b);
+  SunCalc.getMoonIllumination = d => PRETEND.moon === "full" ? { fraction: 1, phase: 0.5, angle: 0 } : PRETEND.moon === "new" ? { fraction: 0, phase: 0, angle: 0 } : SC.gmi(d);
+  SunCalc.getMoonPosition = (d, a, b) => PRETEND.moon === "full" ? { altitude: 0.5, azimuth: -0.4 } : SC.gmp(d, a, b);
+  SunCalc.getMoonTimes = (d, a, b) => PRETEND.moon === "full" ? { rise: new Date(Date.now() + 40 * 60e3) } : SC.gmt(d, a, b);
+}
+
+function wxNow() {
+  if (!PRETEND.sky && !PRETEND.temp) return currentWx;
+  const base = currentWx || { kind: "clear", heavy: false, label: "clear", temp: 62, feels: 62, cloud: 10, wind: 6, cold: false, hot: false };
+  const w = { ...base };
+  if (PRETEND.sky) {
+    const k = { sunny: "clear", heavy: "rain" }[PRETEND.sky] || PRETEND.sky;
+    Object.assign(w, { kind: k, heavy: PRETEND.sky === "heavy", cloud: { clear: 5, partly: 45 }[k] ?? 95,
+      label: { sunny: "sunny", partly: "partly cloudy", cloudy: "cloudy", rain: "rain", heavy: "heavy rain", storm: "thunderstorms", snow: "snow", fog: "fog" }[PRETEND.sky] });
+  }
+  if (PRETEND.temp) {
+    const f = { cold: 38, freezing: 22, hot: 93 }[PRETEND.temp];
+    Object.assign(w, { temp: f, feels: f, cold: f <= 40, hot: f >= 84 });
+  } else if (PRETEND.sky === "snow") Object.assign(w, { temp: 29, feels: 24, cold: true, hot: false });
+  return w;
+}
+
+function packNow() {
+  if (!pretending()) return [...warnings, ...airWarnings];
+  const w = wxNow(), out = [];
+  if (w && ["rain", "storm"].includes(w.kind)) out.push(w.kind === "storm" ? ["Thunderstorms possible", "Pretend: starting in about 20 min"] : ["Bring an umbrella", `Pretend: ${w.heavy ? "heavy rain" : "rain"} for the next few hours`]);
+  if (w && w.kind === "snow") out.push(["Snow: wear boots", "Pretend: about 2 in by evening"]);
+  if (PRETEND.puddles) out.push(["Wet streets: waterproof shoes", "Pretend: 0.4 in of rain earlier today"]);
+  if (w && w.feels <= 32) out.push(["Freezing: coat, hat, gloves", `Feels like ${w.feels}°F`]);
+  else if (w && w.feels <= 45) out.push(["Cold: warm coat", `Feels like ${w.feels}°F`]);
+  if (w && w.feels >= 90) out.push(["Very hot: water and light clothes", `Feels like ${w.feels}°F`]);
+  if (PRETEND.wind) out.push(["Windy", "Pretend: gusts up to 38 mph"]);
+  if (PRETEND.uv) out.push(["Strong sun: sunscreen", "Pretend: UV index 8"]);
+  if (PRETEND.air) out.push(["Unhealthy air: consider a mask", "Pretend: air quality index 165"]);
+  return out;
+}
+function alertsNow() {
+  if (!PRETEND.alert) return alerts;
+  return [{ routes: ["M"], html: "<b>M</b> trains are running with delays while crews work on a signal problem (pretend)", when: "Now", type: "Delays", active: true }, ...alerts];
+}
+
+// the sheet
+(function buildPretend() {
+  const sheet = document.getElementById("pretend");
+  sheet.innerHTML = `<div class="pr-head"><b>Let's pretend it's…</b><button type="button" id="pr-real">Back to real</button><button type="button" id="pr-close" aria-label="Close">Done</button></div>` +
+    PRETEND_OPTIONS.map(([key, label, opts]) => `<div class="pr-group"><span>${label}</span><div>${opts.map(([v, t]) =>
+      `<button type="button" class="pr-chip" data-k="${key === "extra" ? v : key}" data-v="${key === "extra" ? "1" : v}">${t}</button>`).join("")}</div></div>`).join("");
+  sheet.addEventListener("click", e => {
+    const b = e.target.closest(".pr-chip");
+    if (b) { const k = b.dataset.k, v = b.dataset.v; if (PRETEND[k] === v) delete PRETEND[k]; else PRETEND[k] = v; }
+    if (e.target.id === "pr-real") for (const k in PRETEND) delete PRETEND[k];
+    if (e.target.id === "pr-close") sheet.hidden = true;
+    sheet.querySelectorAll(".pr-chip").forEach(c => c.setAttribute("aria-pressed", String(PRETEND[c.dataset.k] === c.dataset.v)));
+    render();
+  });
+  document.querySelectorAll("[data-pretend]").forEach(s => s.addEventListener("click", () => { sheet.hidden = !sheet.hidden; }));
+})();
+
 // The walk you see is 2 minutes shorter than the walk the math uses. The station feels closer; you still leave on time.
 const WALK_FIB_MIN = 2;
 const shownWalk = w => Math.max(1, w - WALK_FIB_MIN);
@@ -378,10 +464,15 @@ function model() {
     o, i, color: ROUTE_COLOR[o.route] || "#888",
     catchable: (trains[i] || []).map(x => ({ ...x, leave: x.t - (o.walk + BUFFER_MIN) * 60 - now })).filter(x => x.leave > -30),
   })).filter(r => r.catchable.length).sort((a, b) => a.catchable[0].leave - b.catchable[0].leave);
-  const pack = [...warnings, ...airWarnings];
+  const pack = packNow();
+  const alerts = alertsNow();
   const age = now - updated;
   const status = lastError ? `Can't reach the MTA. Retrying…` : updated ? (age > 120 ? `Data ${Math.round(age / 60)} min old` : `Live · ${Math.round(age)}s ago`) : "";
   const alertRoutes = new Set(alerts.filter(a => a.active).flatMap(a => a.routes || []));
+  if (PRETEND.go && rows[0]) rows[0] = { ...rows[0], catchable: [{ ...rows[0].catchable[0], leave: 15 }, ...rows[0].catchable.slice(1)] };
+  const badge = document.getElementById("pr-badge");
+  badge.hidden = !pretending();
+  if (pretending()) badge.textContent = "Pretending: " + Object.entries(PRETEND).map(([k, v]) => v === "1" ? k : v).join(", ");
   return { now, rows, best: rows[0], pack, alerts, alertRoutes, sky: skyLine(now), status };
 }
 
@@ -411,7 +502,7 @@ function renderLine(m) {
     document.getElementById("L-what").innerHTML = `for the <b>${b.o.route}</b> at ${b.o.station}`;
     document.getElementById("L-sub").textContent = `toward ${x.terminal} · arrives ${hm(x.t)} · ${shownWalk(b.o.walk)} min walk`;
   }
-  const wx = currentWx;
+  const wx = wxNow();
   document.getElementById("L-wx").textContent = wx ? `${wx.temp}° · ${wx.label}` : "";
   document.body.classList.toggle("dark", Fx.isNight());
   Fx.set({ wx, lat: HOME.lat, lon: HOME.lon });
@@ -522,10 +613,10 @@ function renderHood(m) {
   const next = (trains[central] || []).find(x => x.t > m.now - 60);
   Scene.set({
     forceNight: theme === "night", lat: HOME.lat, lon: HOME.lon,
-    rain: currentWx ? ["rain", "storm"].includes(currentWx.kind) : !!warnings.rain,
-    snow: currentWx ? currentWx.kind === "snow" : !!warnings.snow,
-    umbrella: !!warnings.rain || (currentWx && ["rain", "storm"].includes(currentWx.kind)),
-    wx: currentWx,
+    rain: wxNow() ? ["rain", "storm"].includes(wxNow().kind) : !!warnings.rain,
+    snow: wxNow() ? wxNow().kind === "snow" : !!warnings.snow,
+    umbrella: (!pretending() && !!warnings.rain) || (wxNow() && ["rain", "storm"].includes(wxNow().kind)),
+    wx: wxNow(),
     leaving: !!b && b.catchable[0].leave < 60,
     train: next ? { secs: next.t - m.now, color: ROUTE_COLOR.M } : null,
   });
