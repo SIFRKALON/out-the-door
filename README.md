@@ -5,6 +5,8 @@ plus live door-to-door times to TMPL clubs and grocery stores.
 
 Live at https://sifrkalon.github.io/out-the-door/ (add to Home Screen in Safari).
 
+Paper view, a black-and-white board for e-ink screens or an old tablet on the wall: https://sifrkalon.github.io/out-the-door/eink/ (add `?flash=0` to skip the refresh flash).
+
 ## What it does
 - Live MTA arrivals for Central Av, Myrtle Av–Broadway, Jefferson St and Morgan Av, minus the real walk and a minute of slack.
 - Tap a train to pin it: the big countdown follows it, it chimes at 2 minutes and at "time to go", and the screen stays on.
@@ -21,4 +23,5 @@ Live at https://sifrkalon.github.io/out-the-door/ (add to Home Screen in Safari)
 - `fx.js`: the living background (sky, weather, Grand Central ceiling at night, the little L and M, visitors)
 - `pretend.js`: tap SIFRKALON to preview any weather, time, moon or visitor
 - `sound.js`: the optional soundscape (Sound button in the footer), generated live with Web Audio: a soft city hum, a train rumble now and then, rain and wind from the weather, quiet bell tones (a major chord by day, a softer one at night).
+- `eink/`: the Paper view. Same live data (`data.js`), drawn in plain black and white, redrawn every 30 seconds; tap anywhere to refresh
 - `suncalc.js`: SunCalc 1.9.0 by Vladimir Agafonkin (BSD-2-Clause, see `suncalc-LICENSE.txt`)

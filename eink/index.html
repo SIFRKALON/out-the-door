@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Time To Go! Paper">
+<meta name="theme-color" content="#e9e7df">
+<title>Time To Go! · Paper</title>
+<link rel="apple-touch-icon" href="../apple-touch-icon.png?v=1">
+<link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png?v=1">
+<link rel="stylesheet" href="eink.css?v=1">
+</head>
+<body>
+<main class="panel" id="panel">
+  <div class="top"><span>Time to go</span><span id="clock">--:--</span></div>
+
+  <div class="note" id="note" hidden></div>
+
+  <section class="hero" aria-live="polite">
+    <div class="line" id="bestLine">Listening for trains…</div>
+    <div class="big" id="big">&nbsp;</div>
+  </section>
+
+  <section class="rows" id="rows" aria-label="Trains to Manhattan"></section>
+
+  <div class="foot"><span id="sky">To Manhattan</span><span id="status"></span></div>
+</main>
+
+<script src="../suncalc.js?v=29"></script>
+<script src="../data.js?v=29"></script>
+<script src="eink.js?v=1"></script>
+</body>
+</html>
