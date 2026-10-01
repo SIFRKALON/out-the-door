@@ -24,6 +24,11 @@
   .L { grid-template-columns: minmax(0, 1fr); max-width: 1180px; margin: 0 auto; padding: max(16px, env(safe-area-inset-top)) 16px max(20px, env(safe-area-inset-bottom)); display: grid; gap: 18px; }
   .tess { display: flex; gap: 2px; height: 7px; overflow: hidden; }
   .tess i { display: block; height: 7px; flex: none; border-radius: 1px; }
+  /* jewel tesserae: gold smalti and teal glass that catch the light now and then */
+  .tess i.gold { background: linear-gradient(120deg, #7E5E17 0%, #C9A23E 30%, #FFF0B3 48%, #E2BC55 56%, #8A6A1E 100%); background-size: 320% 100%; animation: glint 7s ease-in-out infinite; animation-delay: var(--d); box-shadow: inset 0 0 0 0.5px rgba(255,240,180,0.6); }
+  .tess i.teal { background: linear-gradient(120deg, #0A3F42 0%, #157A78 32%, #8FE3DA 48%, #1D8C88 58%, #0B4A4C 100%); background-size: 320% 100%; animation: glint 9s ease-in-out infinite; animation-delay: var(--d); }
+  @keyframes glint { 0%, 70% { background-position: 100% 0; } 85% { background-position: 0% 0; } 100% { background-position: 0% 0; } }
+  @media (prefers-reduced-motion: reduce) { .tess i.gold, .tess i.teal { animation: none; background-position: 40% 0; } }
   .L-top { display: flex; align-items: center; gap: 12px; }
   .L-brand { font-family: "Cinzel", Georgia, serif; font-weight: 700; letter-spacing: 4px; font-size: 15px; flex: 1; white-space: nowrap; }
   @media (max-width: 480px) { .L-brand { letter-spacing: 2px; font-size: 13px; } .L-wx { display: none; } .L-top { gap: 8px; } .toggle { font-size: 12px; padding: 5px 10px; } }
@@ -268,6 +273,9 @@ const STONES = ["#7A2E2A", "#C08A2E", "#2F6B5E", "#24427A"];
 document.querySelectorAll("[data-tess]").forEach((el, k) => {
   el.innerHTML = Array.from({ length: 220 }, (_, i) => {
     const r = rnd(i + k * 500), w = 5 + Math.floor(rnd(i * 3 + k) * 9);
+    const d = `--d:${(rnd(i * 11 + k) * -9).toFixed(2)}s`;
+    if (r < 0.06) return `<i class="gold" style="width:${w}px;${d}"></i>`;
+    if (r < 0.10) return `<i class="teal" style="width:${w}px;${d}"></i>`;
     const base = r < 0.16 ? STONES[Math.floor(rnd(i + 9) * 4)] : "#D9D0BF";
     return `<i style="width:${w}px;background:${shade(base, (rnd(i * 7 + k) - 0.5) * 0.18)}"></i>`;
   }).join("");
@@ -276,7 +284,9 @@ document.querySelectorAll("[data-tess]").forEach((el, k) => {
 function mosaicRail(color, seed) {
   let x = 0, stops = [];
   for (let i = 0; x < 900; i++) {
-    const w = 6 + Math.floor(rnd(seed * 97 + i) * 7), c = shade(color, (rnd(seed * 31 + i) - 0.5) * 0.28);
+    const w = 6 + Math.floor(rnd(seed * 97 + i) * 7);
+    const j = rnd(seed * 53 + i);
+    const c = j < 0.035 ? "#D9B24A" : j < 0.05 ? "#1D8C88" : shade(color, (rnd(seed * 31 + i) - 0.5) * 0.28);
     stops.push(`${c} ${x}px ${x + w}px`, `transparent ${x + w}px ${x + w + 2}px`); x += w + 2;
   }
   return `linear-gradient(90deg, ${stops.join(", ")})`;
