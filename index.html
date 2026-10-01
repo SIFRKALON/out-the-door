@@ -28,7 +28,7 @@
   /* jewel tesserae: glass and smalti that catch the light. Colors come in as --a (deep), --b (body), --h (highlight). */
   .jw { background: linear-gradient(120deg, var(--a) 0%, var(--b) 30%, var(--h) 47%, var(--b) 57%, var(--a) 100%); background-size: 320% 100%; animation: glint var(--t, 4s) ease-in-out infinite; animation-delay: var(--d, 0s); }
   @keyframes glint { 0%, 55% { background-position: 100% 0; } 78% { background-position: 0% 0; } 100% { background-position: 0% 0; } }
-  @media (prefers-reduced-motion: reduce) { .jw { animation: none; background-position: 40% 0; } }
+  @media (prefers-reduced-motion: reduce) { .jw { animation: none; background-position: 40% 0; } .L-track .rail, .L-track .car { animation: none; } }
   .L-top { display: flex; align-items: center; gap: 12px; }
   .L-brand { font-family: "Cinzel", Georgia, serif; font-weight: 700; letter-spacing: 4px; font-size: 15px; flex: 1; white-space: nowrap; }
   @media (max-width: 480px) { .L-brand { letter-spacing: 2px; font-size: 13px; } .L-wx { display: none; } .L-top { gap: 8px; } .toggle { font-size: 12px; padding: 5px 10px; } }
@@ -93,6 +93,15 @@
   .L-main > *, .H-main > * { min-width: 0; }
   .L-track .rail { position: absolute; left: 0; right: 14px; top: 13px; height: 8px; display: flex; gap: 2px; overflow: hidden; }
   .L-track .rail i { flex: none; height: 8px; display: block; }
+  /* the occasional rumble: a quick shiver through the rail and the car, every several seconds */
+  .L-track .rail, .L-track .car { animation: rumble var(--rt, 9s) linear infinite; animation-delay: var(--rd, 0s); }
+  .L-row.go .L-track .rail, .L-row.go .L-track .car { --rt: 3.2s; }
+  @keyframes rumble {
+    0%, 90%, 100% { transform: translate(0, 0); }
+    91% { transform: translate(0.4px, -0.7px); } 92.5% { transform: translate(-0.4px, 0.6px); }
+    94% { transform: translate(0.3px, -0.5px); } 95.5% { transform: translate(-0.2px, 0.4px); }
+    97% { transform: translate(0.1px, -0.2px); }
+  }
   .L-track .stn { position: absolute; right: 0; top: 6px; width: 22px; height: 22px; border-radius: 50%; background: #F8F5EE; border: 5px solid #1B1C1A; }
   .L-track .car { position: absolute; top: 8px; width: 28px; height: 18px; border-radius: 5px; background: #1B1C1A; transition: left 1s linear; }
   .L-track .car::after { content: ""; position: absolute; left: 4px; right: 4px; top: 5px; height: 4px; background: #F1D48A; border-radius: 1px; }
@@ -361,7 +370,7 @@ function renderLine(m) {
     if (map.dataset.keys !== keys.join()) {
       map.innerHTML = `<div class="sign"><span class="arrow">←</span>Trains to Manhattan</div>` + m.rows.map(r => `<div class="L-row" id="L-r${r.i}">
         <div class="bullet" style="background:${r.color}">${r.o.route}</div>
-        <div class="L-track"><div class="rail">${mosaicRail(r.color, r.i + 1)}</div><div class="stn"></div><div class="car"></div></div>
+        <div class="L-track" style="--rt:${(7 + rnd(r.i * 17) * 5).toFixed(1)}s;--rd:${(rnd(r.i * 29) * -8).toFixed(1)}s"><div class="rail">${mosaicRail(r.color, r.i + 1)}</div><div class="stn"></div><div class="car"></div></div>
         <div class="L-info"><div class="L-line1"><span class="L-leave"></span><span class="L-walk"><svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="2.6" r="1.4" fill="currentColor" stroke="none"/><path d="M8.5 5.5 7 10l-2.5 4.5M7 10l3 1.5 1 3M8.5 5.5l2.5 2 2 .5M8.5 5.5 6 7l-1 2.5"/></svg>${shownWalk(r.o.walk)} min walk</span></div><div class="L-stn"></div><div class="L-next"></div></div>
       </div>`).join("");
       map.dataset.keys = keys.join();
