@@ -1,6 +1,6 @@
-// Out the Door: living background for the Line theme.
-// Time of day (real sun), plus whatever the weather is doing right now: sun, clouds, rain, snow, fog, storms, cold, heat.
-// Fx.mount(canvas) / Fx.unmount(); Fx.set({ wx, lat, lon }).
+// Living background: the real sky and weather, the Grand Central ceiling at night,
+// two little trains running around the edge, and the occasional visitor.
+// Fx.mount(canvas), Fx.set({ wx, lat, lon }), Fx.trigger(name), Fx.isNight(), Fx.moonHit(x, y).
 const Fx = (() => {
   let cv = null, ctx = null, raf = 0, w = 0, h = 0, dpr = 1, last = 0;
   let st = { wx: null, lat: 40.7, lon: -73.93 };
@@ -9,7 +9,7 @@ const Fx = (() => {
   const stars = Array.from({ length: 140 }, (_, i) => ({ x: R(i), y: R(i + 400) * 0.6, p: R(i + 800) * 6.28, s: R(i + 1200) }));
   const drops = Array.from({ length: 260 }, (_, i) => ({ x: R(i + 2000), y: R(i + 3000), v: 0.7 + R(i + 4000) * 0.6, l: 0.6 + R(i + 5000) * 0.8 }));
   const clouds = Array.from({ length: 9 }, (_, i) => ({ x: R(i + 6000), y: 0.04 + R(i + 6100) * 0.42, s: 0.7 + R(i + 6200) * 0.9, v: 0.004 + R(i + 6300) * 0.006 }));
-  let flash = 0, nextFlash = 4, moonCanvas = null;
+  let flash = 0, nextFlash = 4, moonCanvas = null, moonSpot = null;
   // a few loose constellations, placed for the page rather than the real sky (the real ceiling is famously painted backwards too)
   const CONSTELLATIONS = [
     [[0.08, 0.10], [0.13, 0.07], [0.19, 0.11], [0.24, 0.08], [0.29, 0.13]],
@@ -51,6 +51,10 @@ const Fx = (() => {
   const sprites = [];
   const next = {};
   const rand = (a, b) => a + Math.random() * (b - a);
+  function special(d) {   // the days that get their own visitors
+    const m = d.getMonth(), day = d.getDay(), date = d.getDate();
+    return { marathon: m === 10 && day === 0 && date <= 7, thanksgiving: m === 10 && day === 4 && date >= 22 && date <= 28 };
+  }
   function md(now) { return (now.getMonth() + 1) * 100 + now.getDate(); }   // e.g. Oct 31 -> 1031
   const EGGS = {
     star:     { every: [45, 110], ok: c => c.night && c.clear },
@@ -60,10 +64,20 @@ const Fx = (() => {
     leaves:   { every: [40, 90], ok: c => c.md >= 922 && c.md <= 1130 && c.kind !== "snow" },
     bats:     { every: [35, 70], ok: c => c.night && c.md >= 1024 && c.md <= 1101 },
     fireworks:{ every: [6, 14], ok: c => c.night && (c.md === 704 || c.md === 1231 || c.md === 101) },
+    rat:      { every: [600, 1500], ok: () => true },                                      // pizza rat, rarely
+    jogger:   { every: [150, 360], ok: c => !c.night && c.kind !== "storm" && c.kind !== "snow" },
+    marathon: { every: [8, 20], ok: c => c.marathon && !c.night },                            // first Sunday in November
+    balloon:  { every: [70, 150], ok: c => c.thanksgiving && !c.night },                      // parade morning
+    cat:      { every: [420, 1000], ok: () => true },                                         // a bodega cat peeks in
   };
 
   function spawn(kind, c) {
-    const now = performance.now() / 1000;
+    const now = performance.now() / 1000, P = perimLen();
+    if (kind === "rat") sprites.push({ kind, t0: now, dur: 26, start: rand(0, P), dir: Math.random() < 0.5 ? 1 : -1, dist: P * 0.35 });
+    if (kind === "jogger") sprites.push({ kind, t0: now, dur: 30, start: rand(0, P), dir: Math.random() < 0.5 ? 1 : -1, dist: P * 0.3, shirt: ["#C0492F", "#24427A", "#2F8F6B", "#D9B24A"][Math.floor(rand(0, 4))] });
+    if (kind === "marathon") for (let i = 0; i < 6; i++) sprites.push({ kind: "jogger", t0: now + i * rand(0.6, 1.6), dur: 34, start: P * 0.02, dir: 1, dist: P * 0.55, shirt: ["#C0492F", "#24427A", "#2F8F6B", "#D9B24A", "#7A3E9A", "#E8732F"][i], bib: true });
+    if (kind === "balloon") sprites.push({ kind, t0: now, dur: 40, y: rand(0.12, 0.3) * h });
+    if (kind === "cat") sprites.push({ kind, t0: now, dur: 9, y: rand(0.35, 0.8) * h, side: Math.random() < 0.5 ? 0 : 1 });
     if (kind === "star") sprites.push({ kind, t0: now, dur: 1.3, x: rand(0.3, 0.95) * w, y: rand(0.03, 0.3) * h, a: rand(2.4, 2.8) });
     if (kind === "plane") { const dir = Math.random() < 0.5 ? 1 : -1; sprites.push({ kind, t0: now, dur: 28, dir, y: rand(0.08, 0.32) * h }); }
     if (kind === "pigeon") { const dir = Math.random() < 0.5 ? 1 : -1; sprites.push({ kind, t0: now, dur: rand(7, 10), dir, y: rand(0.12, 0.45) * h, s: rand(0.8, 1.2) }); }
@@ -128,6 +142,51 @@ const Fx = (() => {
         ctx.beginPath(); ctx.ellipse(0, 0, 7 * s.s, 3.6 * s.s, 0, 0, 6.29); ctx.fill();
         ctx.strokeStyle = "rgba(60,30,10,0.5)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-7 * s.s, 0); ctx.lineTo(7 * s.s, 0); ctx.stroke();
       }
+      if (s.kind === "rat" || s.kind === "jogger") {   // things that travel along the little track
+        const P = perimLen(), q = perimPoint(((s.start + s.dir * p * s.dist) % P + P) % P);
+        const fade = Math.min(1, p * 8, (1 - p) * 8);
+        ctx.globalAlpha = fade; ctx.translate(q.x, q.y);
+        if (s.kind === "rat") {   // a rat hauling a whole slice
+          ctx.rotate(q.a + (s.dir < 0 ? Math.PI : 0));
+          ctx.fillStyle = night ? "#5A5E68" : "#5C5A57";
+          ctx.beginPath(); ctx.ellipse(0, -2, 6, 3.2, 0, 0, 6.29); ctx.fill();
+          ctx.beginPath(); ctx.arc(6, -3, 2.4, 0, 6.29); ctx.fill();
+          ctx.strokeStyle = ctx.fillStyle; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-6, -2); ctx.quadraticCurveTo(-11, -6 + Math.sin(now * 8) * 2, -14, -3); ctx.stroke();
+          ctx.fillStyle = "#F2C14E"; ctx.beginPath(); ctx.moveTo(8, -7); ctx.lineTo(20, -1); ctx.lineTo(8, 4); ctx.closePath(); ctx.fill();   // the slice
+          ctx.fillStyle = "#C0492F"; [[11, -2], [14, 0], [11, 1.5]].forEach(([a, b]) => { ctx.beginPath(); ctx.arc(a, b, 1.1, 0, 6.29); ctx.fill(); });
+          ctx.fillStyle = "#B57B3A"; ctx.fillRect(7, -7, 2, 11);   // crust
+        } else {   // a jogger, upright, legs going
+          const step = Math.sin(now * 12) * 3;
+          ctx.strokeStyle = night ? "#E6DCC6" : "#2B2A2E"; ctx.lineWidth = 1.6; ctx.lineCap = "round";
+          ctx.beginPath(); ctx.moveTo(0, -6); ctx.lineTo(step, 0); ctx.moveTo(0, -6); ctx.lineTo(-step, 0); ctx.stroke();
+          ctx.fillStyle = s.shirt; ctx.fillRect(-2, -12, 4, 6);
+          if (s.bib) { ctx.fillStyle = "#FFFFFF"; ctx.fillRect(-1.5, -10.5, 3, 2.5); }
+          ctx.beginPath(); ctx.moveTo(-1, -11); ctx.lineTo(-1 - step * 0.8, -7); ctx.moveTo(1, -11); ctx.lineTo(1 + step * 0.8, -7); ctx.stroke();
+          ctx.fillStyle = "#C99A6B"; ctx.beginPath(); ctx.arc(0, -14.5, 2.4, 0, 6.29); ctx.fill();
+        }
+      }
+      if (s.kind === "balloon") {   // a parade balloon drifting over, with its handlers' lines
+        const x = -80 + p * (w + 160), y = s.y + Math.sin(now * 0.6) * 8;
+        ctx.strokeStyle = "rgba(60,60,70,0.4)"; ctx.lineWidth = 1;
+        for (let k = -2; k <= 2; k++) { ctx.beginPath(); ctx.moveTo(x + k * 8, y + 24); ctx.lineTo(x + k * 18, y + 120); ctx.stroke(); }
+        ctx.fillStyle = "#E8732F"; ctx.beginPath(); ctx.ellipse(x, y, 34, 26, 0, 0, 6.29); ctx.fill();
+        ctx.fillStyle = "#F2C14E"; ctx.beginPath(); ctx.ellipse(x + 26, y - 18, 14, 13, 0, 0, 6.29); ctx.fill();
+        ctx.fillStyle = "#1B1C1A"; ctx.beginPath(); ctx.arc(x + 30, y - 21, 2.2, 0, 6.29); ctx.fill();
+        ["#C0492F", "#D9B24A", "#2F8F6B", "#24427A"].forEach((c, k) => { ctx.fillStyle = c; ctx.beginPath(); ctx.ellipse(x - 30 - k * 3, y - 14 + k * 8, 14, 6, -0.5 + k * 0.3, 0, 6.29); ctx.fill(); });
+      }
+      if (s.kind === "cat") {   // peeks in from the side, blinks, slips away
+        const k = Math.sin(Math.min(1, p * 1.1) * Math.PI), peek = 16 * k, x = s.side ? w - peek + 4 : peek - 4;
+        ctx.translate(x, s.y); ctx.scale(s.side ? -1 : 1, 1);
+        ctx.fillStyle = "#D98C3A";
+        ctx.beginPath(); ctx.arc(-6, 0, 9, 0, 6.29); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(-12, -5); ctx.lineTo(-9, -15); ctx.lineTo(-4, -8); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(-6, -8); ctx.lineTo(0, -15); ctx.lineTo(1, -5); ctx.fill();
+        const blink = (now * 0.7) % 3 < 0.15;
+        ctx.fillStyle = "#1B1C1A";
+        if (blink) { ctx.fillRect(-8, -1, 3, 1); ctx.fillRect(-2, -1, 3, 1); }
+        else { ctx.beginPath(); ctx.arc(-6.5, -1, 1.3, 0, 6.29); ctx.arc(-0.5, -1, 1.3, 0, 6.29); ctx.fill(); }
+        ctx.fillStyle = "#F4B6A8"; ctx.beginPath(); ctx.arc(-3.5, 2.5, 1, 0, 6.29); ctx.fill();
+      }
       if (s.kind === "bat") {   // Halloween week
         const x = -20 + p * (w + 40), y = s.y + Math.sin(now * 5 + s.t0) * 10, f = Math.sin(now * 18) * 6;
         ctx.fillStyle = "#11141C";
@@ -180,6 +239,7 @@ const Fx = (() => {
     ctx.fillStyle = night ? "rgba(255,222,150,0.95)" : "rgba(40,48,60,0.65)";
     for (let wx = -8; wx < 8; wx += 5) ctx.fillRect(wx, -2, 3, 2.4);
     ctx.fillStyle = stripe; ctx.fillRect(-11, 2, 22, 1.2);
+    if (st.wx && st.wx.kind === "snow") { ctx.fillStyle = "#FFFFFF"; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-11, -6, 22, 3, 1.5) : ctx.rect(-11, -6, 22, 3); ctx.fill(); }
     if (front) { ctx.fillStyle = dot; ctx.beginPath(); ctx.arc(9, -0.5, 2.2, 0, 6.29); ctx.fill();
       if (night) { ctx.fillStyle = "rgba(255,240,200,0.9)"; ctx.fillRect(10.5, -3, 1, 6); } }   // headlight at night
     ctx.restore();
@@ -216,6 +276,7 @@ const Fx = (() => {
     const wx = st.wx || { kind: "clear", cloud: 0 };
     const night = phase === "night";
     ctx.clearRect(0, 0, w, h);
+    moonSpot = null;
 
     // time of day
     // night: the Grand Central ceiling. Deep teal, gold stars, faint constellation lines.
@@ -276,6 +337,7 @@ const Fx = (() => {
           m.globalCompositeOperation = "destination-out";
           m.beginPath(); m.arc(r + 1 + (mph < 0.5 ? -1 : 1) * 2 * r * fraction, r + 1, r, 0, 6.29); m.fill();
           ctx.drawImage(mc, mx - r - 1, my - r - 1);
+          moonSpot = { x: mx, y: my, r };
         }
       }
     }
@@ -322,7 +384,7 @@ const Fx = (() => {
     }
 
     // the little things
-    const ctxInfo = { night, phase, kind: wx.kind, clear: !["cloudy", "rain", "storm", "snow", "fog"].includes(wx.kind), cold: !!wx.cold, md: md(now) };
+    const ctxInfo = { ...special(now), night, phase, kind: wx.kind, clear: !["cloudy", "rain", "storm", "snow", "fog"].includes(wx.kind), cold: !!wx.cold, md: md(now) };
     if (!reduce) schedule(ctxInfo, t);
     if (night && (wx.feels ?? 0) >= 65 && ctxInfo.clear) drawFireflies(t);
     drawTrack(night);
@@ -350,6 +412,7 @@ const Fx = (() => {
     },
     unmount() { cancelAnimationFrame(raf); raf = 0; if (ctx) ctx.clearRect(0, 0, w, h); },
     trigger(kind) { if (ctx) spawn(kind, {}); },
+    moonHit(x, y) { return !!moonSpot && Math.hypot(x - moonSpot.x, y - moonSpot.y) <= moonSpot.r + 14; },
     set(s) { st = { ...st, ...s }; if (reduce && ctx) { last = 0; frame(performance.now()); } },
     isNight() { return phaseNow(new Date()).phase === "night"; },
   };

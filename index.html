@@ -4,671 +4,72 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Trains">
+<meta name="theme-color" content="#24427A">
 <title>Trains</title>
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=1">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=1">
+<link rel="manifest" href="manifest.webmanifest?v=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&family=Archivo+Narrow:wght@500;600&family=Cinzel:wght@500;700&family=Pixelify+Sans:wght@400;600&family=VT323&display=swap">
-<style>
-  * { box-sizing: border-box; }
-  html, body { margin: 0; min-height: 100%; }
-  body { -webkit-font-smoothing: antialiased; }
-  button { font: inherit; cursor: pointer; }
-  [hidden] { display: none !important; }
-
-  /* ================= LINE (line map + mosaic) ================= */
-  body.t-line {
-    background-color: #F2EFE8; color: #1B1C1A; font-family: "Archivo", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  }
-  .L { grid-template-columns: minmax(0, 1fr); max-width: 1180px; margin: 0 auto; padding: max(16px, env(safe-area-inset-top)) 16px max(20px, env(safe-area-inset-bottom)); display: grid; gap: 18px; }
-  .band { display: grid; grid-auto-flow: column; grid-template-rows: repeat(3, 9px); grid-auto-columns: 9px; gap: 1.5px; padding: 1.5px; background: #CFC5B2; overflow: hidden; border-radius: 1px; }
-  .band i { display: block; width: 9px; height: 9px; }
-  /* jewel tesserae: gold smalti and teal glass that catch the light now and then */
-  /* jewel tesserae: glass and smalti that catch the light. Colors come in as --a (deep), --b (body), --h (highlight). */
-  .jw { background: linear-gradient(120deg, var(--a) 0%, var(--b) 30%, var(--h) 47%, var(--b) 57%, var(--a) 100%); background-size: 320% 100%; animation: glint var(--t, 4s) ease-in-out infinite; animation-delay: var(--d, 0s); }
-  @keyframes glint { 0%, 55% { background-position: 100% 0; } 78% { background-position: 0% 0; } 100% { background-position: 0% 0; } }
-  @media (prefers-reduced-motion: reduce) { .jw { animation: none; background-position: 40% 0; } .L-track .rail, .L-track .car { animation: none; } }
-  .L-top { display: flex; align-items: center; gap: 12px; }
-  .L-spacer { flex: 1; }
-  @media (max-width: 480px) { .L-top { gap: 8px; } .L-wx { font-size: 13px; white-space: nowrap; } .wxl { display: none; } }
-  .L-sig { display: flex; align-items: center; gap: 14px; width: 100%; justify-content: space-between; margin-top: 10px; }
-  .L-foot .toggle { min-height: 34px; font-size: 13px; padding: 4px 12px; border-width: 1.5px; }
-  .sig { font-family: "Cinzel", Georgia, serif; font-size: 11px; letter-spacing: 4px; opacity: 0.55; }
-  .L-clock { font-weight: 600; font-variant-numeric: tabular-nums; color: #55584F; }
-  .toggle { border: 2px solid currentColor; background: transparent; color: inherit; padding: 6px 12px; min-height: 40px; border-radius: 999px; font-size: 14px; font-weight: 600; }
-  #L-fx { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 0; }
-  .L { position: relative; z-index: 1; }
-  body.t-line.dark .L-clock, body.t-line.dark .L-foot, body.t-line.dark .L-top .toggle, body.t-line.dark .L-wx { color: #F1EEE6; }
-  .L-wx { font-family: "Archivo Narrow", sans-serif; font-size: 15px; color: #3E413B; }
-  .L-main { display: grid; gap: 16px; }
-  @media (min-width: 900px) { .L-main { grid-template-columns: minmax(0, 1fr) 340px; align-items: start; } }
-  .L-col { display: grid; gap: 16px; }
-  .views { display: inline-flex; border: 2px solid currentColor; border-radius: 999px; overflow: hidden; }
-  .views button { border: 0; background: transparent; color: inherit; padding: 6px 14px; min-height: 36px; font-size: 14px; font-weight: 600; }
-  .views button[aria-pressed="true"] { background: #1B1C1A; color: #F8F5EE; }
-  body.t-line.dark .views { color: #F1EEE6; } body.t-line.dark .views button[aria-pressed="true"] { background: #F1EEE6; color: #1B1C1A; }
-  .T-row { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 14px; align-items: center; padding: 14px 0; border-bottom: 1px solid #E2DCCD; }
-  .T-row:last-child { border-bottom: 0; }
-  .T-min { font-weight: 800; font-size: 40px; line-height: 0.9; letter-spacing: -1.5px; color: #24427A; font-variant-numeric: tabular-nums; text-align: right; }
-  .T-min small { display: block; font-size: 13px; letter-spacing: 0; color: #55584F; font-weight: 600; margin-top: 4px; }
-  .T-row.top .T-min { font-size: 56px; color: #7A2E2A; }
-  .T-doing { font-size: 19px; font-weight: 800; }
-  .T-row.top .T-doing { font-size: 24px; }
-  .T-club { margin-top: 4px; }
-  .T-how { font-family: "Archivo Narrow", sans-serif; font-size: 14px; color: #55584F; margin-top: 3px; }
-  .T-how b { color: #1B1C1A; }
-
-  .L-plaque { position: relative; background: transparent; -webkit-backdrop-filter: blur(18px) saturate(1.6); backdrop-filter: blur(18px) saturate(1.6); padding: 40px 40px 32px; text-align: center; overflow: hidden; }
-  .L-plaque > canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; }
-  .L-plaque > div { position: relative; z-index: 1; }
-  @media (max-width: 480px) { .L-plaque { padding: 34px 32px 28px; } .L-plaque .L-sub { font-size: 13px; } }
-  .L-head1 { font-weight: 800; font-size: clamp(34px, 9vw, 64px); line-height: 1; letter-spacing: -1.5px; white-space: nowrap; color: #1B1C1A; font-variant-numeric: tabular-nums; }
-  /* the number, gilded on black glass like an old transom or shop-door numeral */
-  .L-head1 em { font-style: normal; display: inline-block; padding: 0.02em 0.22em 0.06em; margin: 0 0.04em; border-radius: 0.12em; vertical-align: 0.02em;
-    background: #121212; box-shadow: inset 0 0 0 2px #121212, inset 0 0 0 3.5px #B8913A, 0 2px 0 rgba(0,0,0,0.12); }
-  .L-head1 em .gilt { background: linear-gradient(105deg, #8E6B1E 0%, #D9B24A 28%, #FFF2BF 44%, #E8C766 52%, #A57C25 70%, #F3D98A 86%, #8E6B1E 100%); background-size: 260% 100%;
-    -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 1px 0 #3A2A0C); animation: gilt 6s ease-in-out infinite; }
-  @keyframes gilt { 0%, 60% { background-position: 100% 0; } 85%, 100% { background-position: 0% 0; } }
-  @media (prefers-reduced-motion: reduce) { .L-head1 em .gilt { animation: none; } }
-  .L-head1.now { color: #7A2E2A; }
-  .L-head1.quiet { white-space: normal; font-size: clamp(26px, 7vw, 40px); }
-  .L-what { margin-top: 10px; font-size: 18px; line-height: 1.35; }
-  .L-what b { font-weight: 800; }
-  .L-sub { color: #55584F; font-family: "Archivo Narrow", sans-serif; font-size: 15px; margin-top: 4px; }
-  .L-side { display: grid; gap: 12px; }
-  .L-note { background: rgba(252,249,242,0.55); -webkit-backdrop-filter: blur(18px) saturate(1.6); backdrop-filter: blur(18px) saturate(1.6); border: 2px solid #C08A2E; border-left-width: 8px; padding: 10px 14px; }
-  .L-note b { display: block; font-size: 16px; }
-  .L-note span { font-family: "Archivo Narrow", sans-serif; font-size: 14px; color: #55584F; }
-  .L-notices { -webkit-backdrop-filter: blur(18px) saturate(1.6); backdrop-filter: blur(18px) saturate(1.6); background: rgba(252,249,242,0.55); border: 1px solid #B9B09C; }
-  .L-notices summary { padding: 10px 14px; font-family: "Cinzel", Georgia, serif; letter-spacing: 2px; font-size: 13px; cursor: pointer; list-style-position: inside; }
-  .L-notices > div { display: grid; gap: 10px; padding: 0 12px 12px; }
-  .L-chip { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; background: #24427A; color: #F8F5EE; font-family: "Archivo Narrow", sans-serif; font-size: 11px; letter-spacing: 0.5px; vertical-align: 2px; }
-  .L-alert { background: #24427A; color: #F8F5EE; border: 3px solid #F8F5EE; outline: 2px solid #24427A; padding: 10px 14px; font-size: 15px; line-height: 1.35; }
-  .L-alert small { display: block; font-family: "Cinzel", serif; letter-spacing: 3px; font-size: 11px; opacity: 0.85; margin-bottom: 3px; }
-  .L-map { background: rgba(252,249,242,0.5); -webkit-backdrop-filter: blur(18px) saturate(1.6); backdrop-filter: blur(18px) saturate(1.6); box-shadow: inset 0 1px 0 rgba(255,255,255,0.75), 0 8px 30px rgba(40,50,70,0.10); border: 2px solid #1B1C1A; padding: 0 18px 8px; }
-  .sign { margin: 0 -18px 4px; background: #141414; color: #FFFFFF; padding: 9px 18px 8px; border-top: 4px solid #141414; box-shadow: inset 0 2px 0 #FFFFFF; font-weight: 700; font-size: 15px; letter-spacing: 0.2px; display: flex; align-items: center; gap: 10px; }
-  .sign .dot { width: 22px; height: 22px; border-radius: 50%; color: #fff; display: inline-grid; place-items: center; font-size: 13px; font-weight: 800; }
-  .sign .arrow { font-size: 18px; line-height: 1; }
-  .L-row { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 14px 0; border-bottom: 1px solid #E2DCCD; }
-  .L-row:last-child { border-bottom: 0; }
-  @media (max-width: 600px) {
-    .L-row { grid-template-columns: 36px minmax(0, 1fr); grid-template-areas: "b i" "t t"; row-gap: 8px; }
-    .L-row .bullet { grid-area: b; } .L-row .L-info { grid-area: i; text-align: left; } .L-row .L-line1 { justify-content: flex-start; } .L-row .L-track { grid-area: t; }
-  }
-  .bullet { width: 34px; height: 34px; border-radius: 50%; color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 18px; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
-  .L-track { position: relative; height: 34px; min-width: 60px; }
-  .L-main > *, .H-main > * { min-width: 0; }
-  .L-track .rail { position: absolute; left: 0; right: 14px; top: 13px; height: 8px; display: flex; gap: 2px; overflow: hidden; }
-  .L-track .rail i { flex: none; height: 8px; display: block; }
-  /* the occasional rumble: a quick shiver through the rail and the car, every several seconds */
-  .L-track .rail, .L-track .car { animation: rumble var(--rt, 9s) linear infinite; animation-delay: var(--rd, 0s); }
-  .L-row.go .L-track .rail, .L-row.go .L-track .car { --rt: 3.2s; }
-  @keyframes rumble {
-    0%, 90%, 100% { transform: translate(0, 0); }
-    91% { transform: translate(0.4px, -0.7px); } 92.5% { transform: translate(-0.4px, 0.6px); }
-    94% { transform: translate(0.3px, -0.5px); } 95.5% { transform: translate(-0.2px, 0.4px); }
-    97% { transform: translate(0.1px, -0.2px); }
-  }
-  .L-track .stn { position: absolute; right: 0; top: 6px; width: 22px; height: 22px; border-radius: 50%; background: #F8F5EE; border: 5px solid #1B1C1A; }
-  .L-track .car { position: absolute; top: 8px; width: 28px; height: 18px; border-radius: 5px; background: #1B1C1A; transition: left 1s linear; }
-  .L-track .car::after { content: ""; position: absolute; left: 4px; right: 4px; top: 5px; height: 4px; background: #F1D48A; border-radius: 1px; }
-  .L-row.go .stn { animation: pulse 1.2s ease-in-out infinite; }
-  @keyframes pulse { 50% { box-shadow: 0 0 0 7px rgba(122,46,42,0.25); } }
-  .L-info { text-align: right; min-width: 118px; }
-  .L-leave { font-weight: 800; font-size: 20px; font-variant-numeric: tabular-nums; }
-  .L-line1 { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 4px 8px; }
-  .L-walk { display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px 2px 6px; border-radius: 999px; background: #E9E3D6; color: #3E413B; font-family: "Archivo Narrow", sans-serif; font-weight: 600; font-size: 13px; white-space: nowrap; }
-  .L-walk svg { width: 13px; height: 13px; }
-  .L-then { font-weight: 600; color: #3E413B; }
-  .L-stn { margin-top: 4px; }
-  .tablet { display: inline-flex; align-items: center; gap: 7px; font-family: "Cinzel", Georgia, serif; font-weight: 700; font-size: 11.5px; letter-spacing: 2px; color: var(--tc, #2F6B5E); }
-  .tablet::before { content: ""; width: 9px; height: 9px; flex: none; background: linear-gradient(135deg, var(--tc, #2F6B5E) 0 50%, var(--tb, #C08A2E) 50% 100%); }
-  .L-next { font-family: "Archivo Narrow", sans-serif; font-size: 13px; color: #6B6E68; }
-  .L-foot { display: flex; flex-wrap: wrap; gap: 6px 18px; justify-content: space-between; font-family: "Archivo Narrow", sans-serif; font-size: 14px; color: #55584F; }
-  .L-empty { padding: 18px 0; color: #55584F; }
-
-  /* ================= NEIGHBORHOOD (pixel, Gotham-amber nights) ================= */
-  body.t-hood { background: #12101F; color: #F4EBD0; font-family: "VT323", "Courier New", monospace; }
-  .H { grid-template-columns: minmax(0, 1fr); max-width: 1180px; margin: 0 auto; padding: max(14px, env(safe-area-inset-top)) 14px max(20px, env(safe-area-inset-bottom)); display: grid; gap: 16px; }
-  .H-top { display: flex; align-items: center; gap: 12px; font-size: 22px; }
-  .H-top .day { flex: 1; color: #C9BCA0; }
-  .H-sig { display: flex; align-items: center; justify-content: space-between; width: 100%; }
-  .H-sig .sig { font-family: "Pixelify Sans", sans-serif; letter-spacing: 3px; font-size: 12px; }
-  .H-foot .toggle, .H-top .toggle { font-family: "Pixelify Sans", sans-serif; border-radius: 0; border-color: #FFC966; color: #FFC966; font-size: 14px; }
-  .H-main { display: grid; gap: 16px; }
-  @media (min-width: 900px) { .H-main { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); align-items: start; } }
-  .H-scene { display: block; width: 100%; height: auto; image-rendering: pixelated; image-rendering: crisp-edges; box-shadow: 0 0 0 4px #0A0914, 0 0 0 8px #5E3B26; background: #0B0F1F; }
-  .H-box { background: #F4EBD0; color: #1E1A2E; padding: 14px 16px; box-shadow: 0 0 0 4px #1E1A2E, 0 0 0 8px #F4EBD0; margin: 8px; }
-  .H-label { font-family: "Pixelify Sans", sans-serif; font-weight: 600; font-size: 15px; letter-spacing: 1px; color: #7A4E2D; }
-  .H-quest { font-size: 32px; line-height: 1.02; margin-top: 4px; }
-  .H-quest em { font-style: normal; color: #B5402B; }
-  .H-col { display: grid; gap: 14px; }
-  .H-panel { background: #1E1A33; padding: 12px 14px; box-shadow: 0 0 0 3px #0A0914; }
-  .H-panel .H-label { color: #FFC966; margin-bottom: 6px; }
-  .H-item { font-size: 22px; line-height: 1.1; padding: 3px 0; }
-  .H-item span { color: #B9AFCF; }
-  .H-route { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; gap: 10px; align-items: center; font-size: 22px; padding: 4px 0; }
-  .H-dot { width: 22px; height: 22px; display: grid; place-items: center; color: #fff; font-family: "Pixelify Sans", sans-serif; font-size: 14px; font-weight: 600; clip-path: polygon(30% 0, 70% 0, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0 70%, 0 30%); }
-  .H-route .when { color: #FFC966; text-align: right; }
-  .H-route small { display: block; color: #9C92B5; font-size: 18px; }
-  .H-notices summary { cursor: pointer; list-style-position: inside; }
-  .H-flyer { background: #F4F1EA; color: #161616; padding: 10px 12px; font-size: 20px; line-height: 1.05; position: relative; box-shadow: 3px 3px 0 #0A0914; }
-  .H-flyer:nth-child(odd) { transform: rotate(-1deg); }
-  .H-flyer:nth-child(even) { transform: rotate(0.8deg); }
-  .H-flyer::before { content: ""; position: absolute; top: -6px; left: 40%; width: 46px; height: 12px; background: rgba(255, 232, 0, 0.75); }
-  .H-flyer small { display: block; font-family: "Pixelify Sans", sans-serif; font-size: 12px; color: #D6338F; letter-spacing: 1px; }
-  .H-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; font-size: 20px; color: #9C92B5; }
-  .H-top .views { border-radius: 0; border-color: #FFC966; color: #FFC966; font-family: "Pixelify Sans", sans-serif; }
-  .H-top .views button { border-radius: 0; font-size: 13px; padding: 6px 10px; }
-  .H-top .views button[aria-pressed="true"] { background: #FFC966; color: #1E1A2E; }
-  .H-tmpl { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 10px; align-items: center; font-size: 22px; padding: 5px 0; }
-  .H-tmpl .n { color: #FFC966; font-size: 30px; text-align: right; line-height: 1; }
-  .H-tmpl .n small { display: block; font-size: 16px; color: #9C92B5; }
-  .H-tmpl small { display: block; color: #9C92B5; font-size: 18px; }
-  .H-made { font-family: "Pixelify Sans", sans-serif; background: #FFC966; color: #1E1A2E; border: 0; padding: 8px 14px; min-height: 40px; box-shadow: 0 4px 0 #A9772B; }
-  .H-made:active { transform: translateY(3px); box-shadow: 0 1px 0 #A9772B; }
-
-  button.sig { background: none; border: 0; padding: 6px 0; color: inherit; cursor: pointer; }
-  .pretend { position: fixed; left: 50%; bottom: max(12px, env(safe-area-inset-bottom)); transform: translateX(-50%); width: min(560px, calc(100vw - 24px)); max-height: 70vh; overflow: auto; z-index: 50;
-    background: #161616; color: #F4EFE3; border-radius: 14px; padding: 14px 16px 16px; box-shadow: 0 12px 40px rgba(0,0,0,0.35); font-family: "Archivo", Helvetica, Arial, sans-serif; font-size: 14px; }
-  .pr-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; } .pr-head b { flex: 1; font-size: 15px; }
-  .pr-head button { background: none; border: 1px solid #555; color: #F4EFE3; border-radius: 999px; padding: 5px 12px; font-size: 13px; }
-  .pr-group { padding: 8px 0; border-top: 1px solid #2A2A2A; } .pr-group > span { display: block; font-size: 12px; color: #A8A091; margin-bottom: 6px; letter-spacing: 0.5px; }
-  .pr-group > div { display: flex; flex-wrap: wrap; gap: 6px; }
-  .pr-chip { background: #222; color: #F4EFE3; border: 1px solid #3A3A3A; border-radius: 999px; padding: 6px 12px; min-height: 34px; font-size: 13px; }
-  .pr-chip[aria-pressed="true"] { background: #D9B24A; color: #161616; border-color: #D9B24A; font-weight: 700; }
-  .pr-badge { position: fixed; top: max(8px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); z-index: 40; background: #D9B24A; color: #161616; font: 700 12px "Archivo", sans-serif; padding: 5px 12px; border-radius: 999px; box-shadow: 0 4px 14px rgba(0,0,0,0.2); pointer-events: none; }
-  /* ---- Line at night: boxes become dark teal glass trimmed in brass, to sit under the Grand Central ceiling ---- */
-  body.t-line.dark .L-head1, body.t-line.dark .L-what, body.t-line.dark .L-what b { color: #F4EBD0; }
-  body.t-line.dark .L-head1.now { color: #F0B08A; }
-  body.t-line.dark .L-sub { color: #AFC0BA; }
-  body.t-line.dark .L-map { background: rgba(10, 30, 31, 0.4); border-color: rgba(217, 178, 74, 0.55); -webkit-backdrop-filter: blur(9px) saturate(1.3); backdrop-filter: blur(9px) saturate(1.3); }
-  body.t-line.dark .sign { box-shadow: inset 0 2px 0 #D9B24A; }
-  body.t-line.dark .L-row, body.t-line.dark .T-row { border-bottom-color: rgba(233, 200, 106, 0.16); }
-  body.t-line.dark .L-leave, body.t-line.dark .T-doing { color: #F4EBD0; }
-  body.t-line.dark .L-walk { background: rgba(244, 235, 208, 0.10); color: #E6DCC6; }
-  body.t-line.dark .L-next, body.t-line.dark .T-how, body.t-line.dark .L-empty, body.t-line.dark .T-min small { color: #9FB2AC; }
-  body.t-line.dark .L-then, body.t-line.dark .T-how b { color: #E6DCC6; }
-  body.t-line.dark .tablet { color: #E9D29A; }
-  body.t-line.dark .T-min { color: #E9C86A; }
-  body.t-line.dark .T-row.top .T-min { color: #F0B08A; }
-  body.t-line.dark .L-track .stn { background: #0F2627; border-color: #F4EBD0; }
-  body.t-line.dark .L-track .car { background: #EDE4CC; }
-  body.t-line.dark .L-track .car::after { background: #1B1C1A; }
-  body.t-line.dark .L-note, body.t-line.dark .L-notices { background: rgba(10, 30, 31, 0.5); border-color: rgba(217, 178, 74, 0.6); color: #F4EBD0; }
-  body.t-line.dark .L-note span { color: #AFC0BA; }
-  :focus-visible { outline: 3px solid #FFC966; outline-offset: 2px; }
-  @media (prefers-reduced-motion: reduce) { .L-track .car { transition: none; } .L-row.go .stn { animation: none; } }
-</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&family=Archivo+Narrow:wght@500;600&family=Cinzel:wght@500;700&display=swap">
+<link rel="stylesheet" href="style.css?v=23">
 </head>
-<body class="t-line">
+<body>
+<canvas id="sky" aria-hidden="true"></canvas>
 
-<!-- ============ LINE ============ -->
-<canvas id="L-fx" aria-hidden="true"></canvas>
-<div class="L" id="ui-line">
+<div class="page">
   <header>
     <div class="band" id="band" aria-hidden="true"></div>
-    <div class="L-top" style="margin-top: 12px">
-      <div class="views" role="group" aria-label="View"><button type="button" data-view="trains">Trains</button><button type="button" data-view="tmpl">TMPL</button><button type="button" data-view="grocery">Groceries</button></div>
-      <span class="L-spacer"></span>
-      <span class="L-wx" id="L-wx"></span>
-      <span class="L-clock" id="L-clock"></span>
+    <div class="top">
+      <div class="views" role="group" aria-label="View">
+        <button type="button" data-view="trains">Trains</button><button type="button" data-view="tmpl">TMPL</button><button type="button" data-view="grocery">Groceries</button>
+      </div>
+      <span class="spacer"></span>
+      <span class="wx" id="wx"></span>
+      <span class="clock" id="clock"></span>
     </div>
   </header>
-  <div class="L-main">
-    <div class="L-col">
-      <div id="L-pack" class="L-col"></div>
-      <section class="L-plaque" aria-live="polite">
-        <canvas id="plaque-bg" aria-hidden="true"></canvas>
-        <div class="L-head1 quiet" id="L-head1">Listening for trains…</div>
-        <div class="L-what" id="L-what"></div>
-        <div class="L-sub" id="L-sub"></div>
-      </section>
-      <section class="L-map" id="L-map" aria-label="All train options"></section>
-      <section class="L-map" id="L-tmpl" aria-label="Time to each TMPL club" hidden></section>
-    </div>
-    <div class="L-col">
-      <details class="L-notices" id="L-notices" hidden><summary id="L-notices-sum">Service notices</summary><div id="L-alerts"></div></details>
-    </div>
-  </div>
-  <footer class="L-foot"><span id="L-sky"></span><span id="L-status"></span>
-    <span class="L-sig"><button class="toggle" type="button" data-toggle>Neighborhood</button><button type="button" class="sig" data-pretend aria-label="Pretend mode">SIFRKALON</button></span>
-  </footer>
-</div>
 
-<!-- ============ NEIGHBORHOOD ============ -->
-<div class="H" id="ui-hood" hidden>
-  <header class="H-top">
-    <span class="day" id="H-day"></span>
-    <span id="H-clock"></span>
-    <span class="views" role="group" aria-label="View"><button type="button" data-view="trains">Trains</button><button type="button" data-view="tmpl">TMPL</button><button type="button" data-view="grocery">Food</button></span>
-  </header>
-  <div class="H-main">
-    <div class="H-col">
-      <canvas class="H-scene" id="H-scene" width="192" height="108" role="img" aria-label="Pixel street: your building, the elevated M, Central Av station"></canvas>
-      <section class="H-panel" id="H-pack" hidden><div class="H-label">PACK</div><div id="H-pack-items"></div></section>
-      <section class="H-box" aria-live="polite">
-        <div class="H-label">QUEST · INTO THE CITY</div>
-        <div class="H-quest" id="H-quest">Listening for trains…</div>
+  <div class="main">
+    <div class="col">
+      <div class="col" id="notes"></div>
+      <section class="plaque" id="plaque" aria-live="polite">
+        <canvas id="plaque-bg" aria-hidden="true"></canvas>
+        <div class="head quiet" id="head">Listening for trains…</div>
+        <div class="what" id="what"></div>
+        <div class="sub" id="sub"></div>
       </section>
+      <section class="list glass" id="list" aria-label="Trains to Manhattan"></section>
+      <section class="list glass" id="places" aria-label="Places" hidden></section>
     </div>
-    <div class="H-col">
-      <section class="H-panel"><div class="H-label" id="H-routes-label">OTHER ROUTES</div><div id="H-routes"></div></section>
-      <details class="H-panel H-notices" id="H-notices" hidden><summary class="H-label" id="H-notices-sum">NOTICES</summary><div class="H-col" id="H-alerts" style="padding-top:10px"></div></details>
-      <footer class="H-foot">
-        <button class="H-made" type="button" id="H-made">I made it out</button>
-        <span id="H-streak"></span>
-        <span id="H-sky"></span>
-        <span id="H-status"></span>
-        <span class="H-sig"><button class="toggle" type="button" data-toggle>Night</button><button type="button" class="sig" data-pretend aria-label="Pretend mode">SIFRKALON</button></span>
-      </footer>
+    <div class="col">
+      <details class="notices glass" id="notices" hidden><summary id="notices-sum">Service notices</summary><div id="alerts"></div></details>
     </div>
   </div>
+
+  <footer class="foot">
+    <button type="button" class="skyline" id="skyline" title="Tap for the moon"></button>
+    <span id="status"></span>
+    <span class="foot2">
+      <button type="button" class="pill" id="awake" aria-pressed="false">Keep screen on</button>
+      <button type="button" class="sig" id="sig" aria-label="Pretend mode">SIFRKALON</button>
+    </span>
+  </footer>
 </div>
 
 <div class="pretend" id="pretend" hidden></div>
 <div class="pr-badge" id="pr-badge" hidden></div>
+<div class="toast" id="toast" role="status" hidden></div>
 
-<script src="suncalc.js?v=10"></script>
-<script src="data.js?v=10"></script>
-<script src="scene.js?v=10"></script>
-<script src="fx.js?v=22"></script>
-<script src="tmpl.js?v=14"></script>
-<script>
-// ---------- themes: line → neighborhood → neighborhood at night ----------
-const THEMES = ["line", "hood", "night"];
-const NEXT_LABEL = { line: "Neighborhood", hood: "Night", night: "Line map" };
-const ROUTE_COLOR = { M: "#FF6319", J: "#996633", Z: "#996633", L: "#A7A9AC" };
-let view = "trains";
-try { view = localStorage.getItem("otd-view") || "trains"; } catch (e) {}
-const qv = new URLSearchParams(location.search).get("view");
-if (["trains", "tmpl", "grocery"].includes(qv)) view = qv;
-if (!["trains", "tmpl", "grocery"].includes(view)) view = "trains";
-document.querySelectorAll("[data-view]").forEach(b => b.addEventListener("click", () => {
-  view = b.dataset.view;
-  try { localStorage.setItem("otd-view", view); } catch (e) {}
-  render();
-}));
-let theme = "line";
-try { theme = localStorage.getItem("otd-theme") || "line"; } catch (e) {}
-const q = new URLSearchParams(location.search).get("theme");
-if (THEMES.includes(q)) theme = q;
-if (!THEMES.includes(theme)) theme = "line";
-
-function applyTheme() {
-  const isLine = theme === "line";
-  document.body.className = isLine ? "t-line" : "t-hood";
-  document.getElementById("ui-line").hidden = !isLine;
-  document.getElementById("ui-hood").hidden = isLine;
-  document.querySelectorAll("[data-toggle]").forEach(b => b.textContent = NEXT_LABEL[theme]);
-  document.querySelector('meta[name="theme-color"]')?.remove();
-  document.getElementById("L-fx").hidden = !isLine;
-  if (isLine) { Scene.unmount(); Fx.mount(document.getElementById("L-fx")); }
-  else { Fx.unmount(); Scene.mount(document.getElementById("H-scene")); }
-  render();
-}
-document.querySelectorAll("[data-toggle]").forEach(b => b.addEventListener("click", () => {
-  theme = THEMES[(THEMES.indexOf(theme) + 1) % THEMES.length];
-  try { localStorage.setItem("otd-theme", theme); } catch (e) {}
-  applyTheme();
-}));
-
-// mosaic band
-const TESS = ["#7A2E2A", "#C08A2E", "#2F6B5E", "#24427A"];
-// hand-laid tesserae: irregular widths, gentle tonal drift, mostly warm neutrals with a few colored stones
-const rnd = i => { const x = Math.sin(i * 12.9898 + 78.233) * 43758.5453; return x - Math.floor(x); };
-function shade(hex, f) {   // f > 0 lighter, < 0 darker
-  const n = parseInt(hex.slice(1), 16), c = [n >> 16, (n >> 8) & 255, n & 255];
-  return "#" + c.map(v => Math.round(f > 0 ? v + (255 - v) * f : v * (1 + f)).toString(16).padStart(2, "0")).join("");
-}
-const STONES = ["#7A2E2A", "#C08A2E", "#2F6B5E", "#24427A"];
-const GOLD = { a: "#7E5E17", b: "#C9A23E", h: "#FFF0B3" }, TEAL = { a: "#0A3F42", b: "#157A78", h: "#8FE3DA" };
-const jewelOf = c => ({ a: shade(c, -0.4), b: c, h: shade(c, 0.62) });
-// a shimmering piece; t = seconds between glints, d = where in that cycle it starts
-const jewel = (w, j, seed, h = "") => `<i class="jw" style="width:${w}px;${h}--a:${j.a};--b:${j.b};--h:${j.h};--t:${(3 + rnd(seed) * 2.5).toFixed(1)}s;--d:${(rnd(seed * 3 + 1) * -6).toFixed(2)}s"></i>`;
-// Tile palette, after the old IRT/BMT walls: brick, ochre, sage, navy on buff.
-const TILE = { grout: "#CFC5B2", field: "#F3EEE2", brick: "#9A3F2C", ochre: "#C08A2E", sage: "#6E8B6A", navy: "#24427A" };
-const tone = (c, i, k = 0.1) => shade(c, (rnd(i) - 0.5) * k);
-
-// top band: three courses. brick, then an ochre/sage checker set with the odd jewel, then navy
-(function buildBand() {
-  let html = "";
-  for (let col = 0; col < 260; col++) for (let row = 0; row < 3; row++) {
-    const i = col * 3 + row;
-    if (row === 1) {
-      const j = rnd(i * 5 + 3);
-      if (j < 0.06) { html += jewel(9, GOLD, i, "height:9px;"); continue; }
-      if (j < 0.10) { html += jewel(9, TEAL, i, "height:9px;"); continue; }
-      html += `<i style="background:${tone(col % 2 ? TILE.ochre : TILE.sage, i)}"></i>`;
-    } else {
-      html += `<i style="background:${tone(row === 0 ? TILE.brick : TILE.navy, i)}"></i>`;
-    }
-  }
-  document.getElementById("band").innerHTML = html;
-})();
-
-// the "Leave in" box as a station name tablet: a field of small white tiles inside three bands, rosettes at the corners
-function paintPlaque() {
-  const cv = document.getElementById("plaque-bg");
-  if (!cv || !cv.parentElement.offsetWidth) return;
-  const W = cv.parentElement.offsetWidth, H = cv.parentElement.offsetHeight, dpr = Math.min(2, devicePixelRatio || 1);
-  cv.width = W * dpr; cv.height = H * dpr;
-  const c = cv.getContext("2d"); c.setTransform(dpr, 0, 0, dpr, 0, 0);
-  const T = W < 480 ? 7.5 : 9, G = 1.5, S = T + G;
-  const cols = Math.floor((W - G) / S), rows = Math.floor((H - G) / S);
-  const ox = (W - cols * S - G) / 2 + G, oy = (H - rows * S - G) / 2 + G;
-  const dark = document.body.classList.contains("dark");
-  c.fillStyle = dark ? "#0D1D1E" : TILE.grout; c.fillRect(0, 0, W, H);
-  for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
-    const ring = Math.min(x, y, cols - 1 - x, rows - 1 - y), i = y * 997 + x;
-    const corner = (x < 3 || x > cols - 4) && (y < 3 || y > rows - 4);
-    let col;
-    if (corner) {
-      const cx = x < 3 ? 1 : cols - 2, cy = y < 3 ? 1 : rows - 2;
-      col = x === cx && y === cy ? "#D9B24A" : (Math.abs(x - cx) + Math.abs(y - cy) === 1 ? TILE.brick : TILE.navy);
-    } else if (ring === 0) col = TILE.brick;
-    else if (ring === 1) col = (x + y) % 2 ? TILE.ochre : TILE.sage;
-    else if (ring === 2) col = TILE.navy;
-    else continue;
-    c.fillStyle = tone(col, i, 0.12);
-    c.fillRect(ox + x * S, oy + y * S, T, T);
-  }
-  // the field: frosted glass, so the sky shows through, with a whisper of tile grid
-  const fx0 = ox + 3 * S - G, fy0 = oy + 3 * S - G, fw = (cols - 6) * S + G, fh = (rows - 6) * S + G;
-  c.clearRect(fx0, fy0, fw, fh);
-  c.fillStyle = dark ? "rgba(16,40,40,0.52)" : "rgba(252,249,242,0.5)";
-  c.fillRect(fx0, fy0, fw, fh);
-  c.strokeStyle = dark ? "rgba(244,235,208,0.07)" : "rgba(160,145,120,0.13)"; c.lineWidth = 1;
-  c.beginPath();
-  for (let x = 3; x <= cols - 3; x++) { const X = ox + x * S - G / 2; c.moveTo(X, fy0); c.lineTo(X, fy0 + fh); }
-  for (let y = 3; y <= rows - 3; y++) { const Y = oy + y * S - G / 2; c.moveTo(fx0, Y); c.lineTo(fx0 + fw, Y); }
-  c.stroke();
-}
-addEventListener("resize", paintPlaque);
-if (window.ResizeObserver) new ResizeObserver(paintPlaque).observe(document.querySelector(".L-plaque"));
-
-function mosaicRail(color, seed) {
-  let out = "", x = 0;
-  for (let i = 0; x < 1000; i++) {
-    const w = 6 + Math.floor(rnd(seed * 97 + i) * 7), j = rnd(seed * 53 + i);
-    out += j < 0.04 ? jewel(w, GOLD, seed * 131 + i)
-         : j < 0.06 ? jewel(w, TEAL, seed * 137 + i)
-         : j < 0.17 ? jewel(w, jewelOf(color), seed * 139 + i)
-         : `<i style="width:${w}px;background:${shade(color, (rnd(seed * 31 + i) - 0.5) * 0.28)}"></i>`;
-    x += w + 2;
-  }
-  return out;
-}
-// station tablets: each stop has its own colors
-const TABLETS = { "Central Av": ["#7A2E2A", "#C08A2E"], "Myrtle Av–Broadway": ["#24427A", "#C08A2E"], "Jefferson St": ["#2F6B5E", "#7A2E2A"], "Morgan Av": ["#8A5A1E", "#24427A"],
-  "Astor Place": ["#24427A", "#7A2E2A"], "Hell's Kitchen": ["#2F6B5E", "#C08A2E"], "West Village": ["#7A2E2A", "#2F6B5E"], "Avenue A": ["#8A5A1E", "#2F6B5E"], "Lexington": ["#24427A", "#C08A2E"],
-  "Essex Crossing": ["#7A2E2A", "#C08A2E"], "Lower East Side": ["#24427A", "#C08A2E"], "Williamsburg": ["#2F6B5E", "#C08A2E"] };
-const tablet = name => { const [c, b] = TABLETS[name] || ["#2F6B5E", "#C08A2E"]; return `<span class="tablet" style="--tc:${c};--tb:${b}">${esc(name.toUpperCase())}</span>`; };
-
-// ---------- pretend mode (tap SIFRKALON): preview weather, time of day, moon and other states ----------
-const PRETEND = {};   // sky, temp, time, moon, go, alert, air, wind, uv, puddles
-const PRETEND_OPTIONS = [
-  ["sky",  "Weather", [["sunny", "Sunny"], ["partly", "Partly cloudy"], ["cloudy", "Cloudy"], ["rain", "Rain"], ["heavy", "Downpour"], ["storm", "Storm"], ["snow", "Snow"], ["fog", "Fog"]]],
-  ["temp", "Temperature", [["cold", "Cold"], ["freezing", "Freezing"], ["hot", "Hot"]]],
-  ["time", "Time of day", [["day", "Day"], ["golden", "Golden hour"], ["dusk", "Dusk"], ["night", "Night"]]],
-  ["moon", "Moon", [["full", "Full moon"], ["new", "New moon"]]],
-  ["extra", "Other", [["go", "Time to go"], ["alert", "Service alert"], ["air", "Bad air"], ["wind", "Windy"], ["uv", "Strong sun"], ["puddles", "Wet streets"]]],
-];
-const pretending = () => Object.keys(PRETEND).length > 0;
-
-// Bend SunCalc so every sky (background, pixel scene, sunset line) follows the pretend time and moon.
-if (window.SunCalc) {
-  const SC = { gp: SunCalc.getPosition, gmi: SunCalc.getMoonIllumination, gmp: SunCalc.getMoonPosition, gmt: SunCalc.getMoonTimes };
-  const ALT = { day: 40, golden: 5, dusk: -3, night: -25 };
-  SunCalc.getPosition = (d, a, b) => PRETEND.time ? { altitude: ALT[PRETEND.time] * Math.PI / 180, azimuth: 0.7 } : SC.gp(d, a, b);
-  SunCalc.getMoonIllumination = d => PRETEND.moon === "full" ? { fraction: 1, phase: 0.5, angle: 0 } : PRETEND.moon === "new" ? { fraction: 0, phase: 0, angle: 0 } : SC.gmi(d);
-  SunCalc.getMoonPosition = (d, a, b) => PRETEND.moon === "full" ? { altitude: 0.5, azimuth: -0.4 } : SC.gmp(d, a, b);
-  SunCalc.getMoonTimes = (d, a, b) => PRETEND.moon === "full" ? { rise: new Date(Date.now() + 40 * 60e3) } : SC.gmt(d, a, b);
-}
-
-function wxNow() {
-  if (!PRETEND.sky && !PRETEND.temp) return currentWx;
-  const base = currentWx || { kind: "clear", heavy: false, label: "clear", temp: 62, feels: 62, cloud: 10, wind: 6, cold: false, hot: false };
-  const w = { ...base };
-  if (PRETEND.sky) {
-    const k = { sunny: "clear", heavy: "rain" }[PRETEND.sky] || PRETEND.sky;
-    Object.assign(w, { kind: k, heavy: PRETEND.sky === "heavy", cloud: { clear: 5, partly: 45 }[k] ?? 95,
-      label: { sunny: "sunny", partly: "partly cloudy", cloudy: "cloudy", rain: "rain", heavy: "heavy rain", storm: "thunderstorms", snow: "snow", fog: "fog" }[PRETEND.sky] });
-  }
-  if (PRETEND.temp) {
-    const f = { cold: 38, freezing: 22, hot: 93 }[PRETEND.temp];
-    Object.assign(w, { temp: f, feels: f, cold: f <= 40, hot: f >= 84 });
-  } else if (PRETEND.sky === "snow") Object.assign(w, { temp: 29, feels: 24, cold: true, hot: false });
-  return w;
-}
-
-function packNow() {
-  if (!pretending()) return [...warnings, ...airWarnings];
-  const w = wxNow(), out = [];
-  if (w && ["rain", "storm"].includes(w.kind)) out.push(w.kind === "storm" ? ["Thunderstorms possible", "Pretend: starting in about 20 min"] : ["Bring an umbrella", `Pretend: ${w.heavy ? "heavy rain" : "rain"} for the next few hours`]);
-  if (w && w.kind === "snow") out.push(["Snow: wear boots", "Pretend: about 2 in by evening"]);
-  if (PRETEND.puddles) out.push(["Wet streets: waterproof shoes", "Pretend: 0.4 in of rain earlier today"]);
-  if (w && w.feels <= 32) out.push(["Freezing: coat, hat, gloves", `Feels like ${w.feels}°F`]);
-  else if (w && w.feels <= 45) out.push(["Cold: warm coat", `Feels like ${w.feels}°F`]);
-  if (w && w.feels >= 90) out.push(["Very hot: water and light clothes", `Feels like ${w.feels}°F`]);
-  if (PRETEND.wind) out.push(["Windy", "Pretend: gusts up to 38 mph"]);
-  if (PRETEND.uv) out.push(["Strong sun: sunscreen", "Pretend: UV index 8"]);
-  if (PRETEND.air) out.push(["Unhealthy air: consider a mask", "Pretend: air quality index 165"]);
-  return out;
-}
-function alertsNow() {
-  if (!PRETEND.alert) return alerts;
-  return [{ routes: ["M"], html: "<b>M</b> trains are running with delays while crews work on a signal problem (pretend)", when: "Now", type: "Delays", active: true }, ...alerts];
-}
-
-// the sheet
-(function buildPretend() {
-  const sheet = document.getElementById("pretend");
-  sheet.innerHTML = `<div class="pr-head"><b>Let's pretend it's…</b><button type="button" id="pr-real">Back to real</button><button type="button" id="pr-close" aria-label="Close">Done</button></div>` +
-    PRETEND_OPTIONS.map(([key, label, opts]) => `<div class="pr-group"><span>${label}</span><div>${opts.map(([v, t]) =>
-      `<button type="button" class="pr-chip" data-k="${key === "extra" ? v : key}" data-v="${key === "extra" ? "1" : v}">${t}</button>`).join("")}</div></div>`).join("") +
-    `<div class="pr-group"><span>Show me now (Line map)</span><div>${[["star", "Shooting star"], ["plane", "Plane"], ["pigeon", "Pigeon"], ["steam", "Steam"], ["leaves", "Leaves"], ["bats", "Bats"], ["fireworks", "Fireworks"]]
-      .map(([v, t]) => `<button type="button" class="pr-chip" data-egg="${v}">${t}</button>`).join("")}</div></div>`;
-  sheet.addEventListener("click", e => {
-    const egg = e.target.closest("[data-egg]");
-    if (egg) { if (window.Fx) Fx.trigger(egg.dataset.egg); return; }
-    const b = e.target.closest(".pr-chip");
-    if (b) { const k = b.dataset.k, v = b.dataset.v; if (PRETEND[k] === v) delete PRETEND[k]; else PRETEND[k] = v; }
-    if (e.target.id === "pr-real") for (const k in PRETEND) delete PRETEND[k];
-    if (e.target.id === "pr-close") sheet.hidden = true;
-    sheet.querySelectorAll(".pr-chip").forEach(c => c.setAttribute("aria-pressed", String(PRETEND[c.dataset.k] === c.dataset.v)));
-    render();
-  });
-  document.querySelectorAll("[data-pretend]").forEach(s => s.addEventListener("click", () => { sheet.hidden = !sheet.hidden; }));
-})();
-
-// The walk you see is 2 minutes shorter than the walk the math uses. The station feels closer; you still leave on time.
-const WALK_FIB_MIN = 2;
-const shownWalk = w => Math.max(1, w - WALK_FIB_MIN);
-
-// ---------- shared model ----------
-const mins = s => Math.max(0, Math.floor(s / 60));
-function model() {
-  const now = Date.now() / 1000;
-  const rows = OPTIONS.map((o, i) => ({
-    o, i, color: ROUTE_COLOR[o.route] || "#888",
-    catchable: (trains[i] || []).map(x => ({ ...x, leave: x.t - (o.walk + BUFFER_MIN) * 60 - now })).filter(x => x.leave > -30),
-  })).filter(r => r.catchable.length).sort((a, b) => a.catchable[0].leave - b.catchable[0].leave);
-  const pack = packNow();
-  const alerts = alertsNow();
-  const age = now - updated;
-  const status = lastError ? `Can't reach the MTA. Retrying…` : updated ? (age > 120 ? `Data ${Math.round(age / 60)} min old` : `Live · ${Math.round(age)}s ago`) : "";
-  const alertRoutes = new Set(alerts.filter(a => a.active).flatMap(a => a.routes || []));
-  if (PRETEND.go && rows[0]) rows[0] = { ...rows[0], catchable: [{ ...rows[0].catchable[0], leave: 15 }, ...rows[0].catchable.slice(1)] };
-  const badge = document.getElementById("pr-badge");
-  badge.hidden = !pretending();
-  if (pretending()) badge.textContent = "Pretending: " + Object.entries(PRETEND).map(([k, v]) => v === "1" ? k : v).join(", ");
-  return { now, rows, best: rows[0], pack, alerts, alertRoutes, sky: skyLine(now), status };
-}
-
-// ---------- destinations (TMPL, groceries) ----------
-const DEST_VIEWS = {
-  tmpl:    { title: "Time to TMPL", quest: "Side quest", showName: true,  times: (rows, now) => tmplTimes(rows, now) },
-  grocery: { title: "Groceries",    quest: "Errand",     showName: true,  times: (rows, now) => destTimes(GROCERIES, rows, now, 0) },
-};
-function howTo(b, short) {
-  if (b.walkOnly) return "walk from home";
-  const leave = b.leave < 60 ? "leave now" : `leave in ${mins(b.leave)}`;
-  return short ? `${b.route} from ${b.from}, off at ${b.exit}` : `<b>${b.route}</b> from ${b.from} · ${leave} · off at ${b.exit}`;
-}
-
-// ---------- LINE render ----------
-const TRACK_WINDOW = 15 * 60;   // a car starts its run 15 min before you need to leave
-function renderLine(m) {
-  document.getElementById("L-clock").textContent = hm(m.now);
-  const head = document.getElementById("L-head1"), b = m.best;
-  if (!b) {
-    head.textContent = updated ? "No trains right now" : "Listening for trains…"; head.className = "L-head1 quiet";
-    document.getElementById("L-what").textContent = ""; document.getElementById("L-sub").textContent = "";
-  } else {
-    const x = b.catchable[0], go = x.leave < 60;
-    head.className = "L-head1" + (go ? " now" : "");
-    head.innerHTML = go ? "Time to go" : `Leave in <em><span class="gilt">${mins(x.leave)}</span></em> min`;
-    document.getElementById("L-what").innerHTML = `for the <b>${b.o.route}</b> at ${b.o.station}`;
-    document.getElementById("L-sub").textContent = `toward ${x.terminal} · arrives ${hm(x.t)} · ${shownWalk(b.o.walk)} min walk`;
-  }
-  const wx = wxNow();
-  document.getElementById("L-wx").innerHTML = wx ? `${wx.temp}°<span class="wxl"> · ${esc(wx.label)}</span>` : "";
-  const wasDark = document.body.classList.contains("dark");
-  document.body.classList.toggle("dark", Fx.isNight());
-  if (wasDark !== document.body.classList.contains("dark")) paintPlaque();
-  Fx.set({ wx, lat: HOME.lat, lon: HOME.lon });
-  document.getElementById("L-pack").innerHTML = m.pack.map(([t, d]) => `<div class="L-note"><b>${t}</b><span>${d}</span></div>`).join("");
-  const nEl = document.getElementById("L-notices");
-  nEl.hidden = !m.alerts.length;
-  document.getElementById("L-notices-sum").textContent = `SERVICE NOTICES · ${m.alerts.length}`;
-  document.getElementById("L-alerts").innerHTML = m.alerts.map(a => `<div class="L-alert"><small>${a.when.toUpperCase()}${a.type ? " · " + esc(a.type).toUpperCase() : ""}</small>${a.html}</div>`).join("");
-
-  const map = document.getElementById("L-map");
-  if (!m.rows.length) { map.dataset.keys = ""; map.innerHTML = `<div class="sign"><span class="arrow">←</span>Trains to Manhattan</div><div class="L-empty">${updated ? "Nothing catchable right now." : "Loading trains…"}</div>`; }
-  else {
-    // keep row elements stable so the cars glide instead of jumping
-    const keys = m.rows.map(r => "r" + r.i);
-    if (map.dataset.keys !== keys.join()) {
-      map.innerHTML = `<div class="sign"><span class="arrow">←</span>Trains to Manhattan</div>` + m.rows.map(r => `<div class="L-row" id="L-r${r.i}">
-        <div class="bullet" style="background:${r.color}">${r.o.route}</div>
-        <div class="L-track" style="--rt:${(7 + rnd(r.i * 17) * 5).toFixed(1)}s;--rd:${(rnd(r.i * 29) * -8).toFixed(1)}s"><div class="rail">${mosaicRail(r.color, r.i + 1)}</div><div class="stn"></div><div class="car"></div></div>
-        <div class="L-info"><div class="L-line1"><span class="L-leave"></span><span class="L-walk"><svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="2.6" r="1.4" fill="currentColor" stroke="none"/><path d="M8.5 5.5 7 10l-2.5 4.5M7 10l3 1.5 1 3M8.5 5.5l2.5 2 2 .5M8.5 5.5 6 7l-1 2.5"/></svg>${shownWalk(r.o.walk)} min walk</span></div><div class="L-stn"></div><div class="L-next"></div></div>
-      </div>`).join("");
-      map.dataset.keys = keys.join();
-    }
-    m.rows.forEach(r => {
-      const el = document.getElementById("L-r" + r.i), x = r.catchable[0];
-      const p = Math.min(1, Math.max(0, 1 - x.leave / TRACK_WINDOW));
-      const track = el.querySelector(".L-track");
-      el.querySelector(".car").style.left = `${p * Math.max(0, track.clientWidth - 46)}px`;
-      el.classList.toggle("go", x.leave < 60);
-      el.querySelector(".L-leave").textContent = x.leave < 60 ? "Leave now" : `Leave in ${mins(x.leave)}`;
-      const hasNotice = m.alertRoutes.has(r.o.route);
-      el.querySelector(".L-stn").innerHTML = tablet(r.o.station) + (hasNotice ? '<span class="L-chip">notice</span>' : "");
-      const later = r.catchable.slice(1, 3).map(y => y.leave < 60 ? "now" : mins(y.leave)).join(", ");
-      el.querySelector(".L-next").innerHTML = `${later ? `<span class="L-then">then ${later} min</span> · ` : ""}to ${esc(x.terminal)}`;
-    });
-  }
-  const tm = view !== "trains";
-  document.querySelector(".L-plaque").hidden = tm;
-  map.hidden = tm;
-  const tEl = document.getElementById("L-tmpl");
-  tEl.hidden = !tm;
-  if (tm) {
-    const D = DEST_VIEWS[view], clubs = D.times(m.rows, m.now);
-    tEl.innerHTML = `<div class="sign"><span class="arrow">→</span>${D.title} · you could be…</div>` + clubs.map((c, n) => c.best ? `<div class="T-row${n === 0 ? " top" : ""}">
-        <div class="T-min">${c.mins}<small>min</small></div>
-        <div><div class="T-doing">${c.doing}</div><div class="T-club">${tablet(c.name)}</div>
-        <div class="T-how">${howTo(c.best)}</div></div>
-      </div>` : `<div class="T-row"><div class="T-min">–</div><div><div class="T-doing">${c.doing}</div><div class="T-club">${c.name.toUpperCase()}</div><div class="T-how">No live route right now</div></div></div>`).join("");
-  }
-  document.querySelectorAll("[data-view]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.view === view)));
-  document.getElementById("L-sky").textContent = m.sky;
-  document.getElementById("L-status").textContent = m.status;
-}
-
-// ---------- NEIGHBORHOOD render ----------
-function streak() {
-  try { return JSON.parse(localStorage.getItem("otd-streak") || "null"); } catch (e) { return null; }
-}
-const dayKey = d => d.toLocaleDateString("en-CA");
-document.getElementById("H-made").addEventListener("click", () => {
-  const today = dayKey(new Date()), yest = dayKey(new Date(Date.now() - 864e5));
-  const s = streak();
-  const next = !s ? { last: today, count: 1 } : s.last === today ? s : { last: today, count: s.last === yest ? s.count + 1 : 1 };
-  try { localStorage.setItem("otd-streak", JSON.stringify(next)); } catch (e) {}
-  render();
-});
-
-function renderHood(m) {
-  const d = new Date();
-  document.getElementById("H-day").textContent = d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
-  document.getElementById("H-clock").textContent = hm(m.now);
-  const b = m.best, qEl = document.getElementById("H-quest");
-  if (!b) qEl.textContent = updated ? "No trains you can make right now. Rest a while." : "Listening for trains…";
-  else {
-    const x = b.catchable[0];
-    const take = m.pack.length ? ` ${m.pack[0][0].replace(/:.*/, "")}.` : "";
-    qEl.innerHTML = x.leave < 60
-      ? `Go now! The <b>${b.o.route}</b> reaches ${b.o.station} at ${hm(x.t)}.${take}`
-      : `Leave in <em>${mins(x.leave)} min</em> for the <b>${b.o.route}</b> at ${b.o.station}, toward ${x.terminal}.${take}`;
-  }
-  const pack = document.getElementById("H-pack");
-  pack.hidden = !m.pack.length;
-  document.getElementById("H-pack-items").innerHTML = m.pack.map(([t, dd]) => `<div class="H-item">${t}<br><span>${dd}</span></div>`).join("");
-  document.getElementById("H-routes").innerHTML = m.rows.slice(1).map(r => {
-    const x = r.catchable[0], later = r.catchable.slice(1, 3).map(y => y.leave < 60 ? "now" : mins(y.leave)).join(", ");
-    return `<div class="H-route"><div class="H-dot" style="background:${r.color}">${r.o.route}</div>
-      <div>${r.o.station}<small>${shownWalk(r.o.walk)} min walk${later ? ` · then ${later}` : ""} · to ${x.terminal}</small></div>
-      <div class="when">${x.leave < 60 ? "now" : `in ${mins(x.leave)}`}</div></div>`;
-  }).join("") || `<div class="H-item"><span>Nothing else coming.</span></div>`;
-  document.getElementById("H-routes-label").textContent = view === "trains" ? "OTHER ROUTES" : DEST_VIEWS[view].title.toUpperCase();
-  if (view !== "trains") {
-    const D = DEST_VIEWS[view], clubs = D.times(m.rows, m.now);
-    const top = clubs[0];
-    if (top && top.best) qEl.innerHTML = `${D.quest}: you could be ${top.doing}${D.showName && view === "grocery" ? " in " + top.name : ""} in <em>${top.mins} min</em>. ${top.best.walkOnly ? "Just walk it." : `Take the ${top.best.route} from ${top.best.from}${top.best.leave < 60 ? ", leaving now" : `, leave in ${mins(top.best.leave)}`}.`}`;
-    document.getElementById("H-routes").innerHTML = clubs.map(c => `<div class="H-tmpl"><div class="n">${c.best ? c.mins : "–"}<small>min</small></div>
-      <div>${c.doing}${D.showName ? " · " + c.name : ""}<small>${c.best ? howTo(c.best, true) : "no live route right now"}</small></div></div>`).join("");
-  }
-  document.querySelectorAll("[data-view]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.view === view)));
-  document.getElementById("H-notices").hidden = !m.alerts.length;
-  document.getElementById("H-notices-sum").textContent = `NOTICES · ${m.alerts.length}`;
-  document.getElementById("H-alerts").innerHTML = m.alerts.map(a => `<div class="H-flyer"><small>${a.when.toUpperCase()}${a.type ? " · " + esc(a.type).toUpperCase() : ""}</small>${a.html}</div>`).join("");
-  const s = streak();
-  document.getElementById("H-streak").textContent = s ? `Streak: ${s.count} day${s.count === 1 ? "" : "s"}` : "";
-  document.getElementById("H-sky").textContent = m.sky;
-  document.getElementById("H-status").textContent = m.status;
-
-  // scene: the next Manhattan-bound M at Central Av rides the el
-  const central = OPTIONS.findIndex(o => o.stop === "M10");
-  const next = (trains[central] || []).find(x => x.t > m.now - 60);
-  Scene.set({
-    forceNight: theme === "night", lat: HOME.lat, lon: HOME.lon,
-    rain: wxNow() ? ["rain", "storm"].includes(wxNow().kind) : !!warnings.rain,
-    snow: wxNow() ? wxNow().kind === "snow" : !!warnings.snow,
-    umbrella: (!pretending() && !!warnings.rain) || (wxNow() && ["rain", "storm"].includes(wxNow().kind)),
-    wx: wxNow(),
-    leaving: !!b && b.catchable[0].leave < 60,
-    train: next ? { secs: next.t - m.now, color: ROUTE_COLOR.M } : null,
-  });
-}
-
-function render() {
-  const m = model();
-  if (theme === "line") renderLine(m); else renderHood(m);
-}
-
-applyTheme();
-refresh();
-refreshWeather();
-refreshAlerts();
-setInterval(refresh, REFRESH_SEC * 1000);
-setInterval(refreshWeather, 10 * 60 * 1000);
-setInterval(refreshAlerts, 2 * 60 * 1000);
-setInterval(render, 1000);
-document.addEventListener("visibilitychange", () => { if (!document.hidden) { refresh(); refreshWeather(); refreshAlerts(); } });
-</script>
+<script src="suncalc.js?v=23"></script>
+<script src="data.js?v=23"></script>
+<script src="places.js?v=23"></script>
+<script src="fx.js?v=23"></script>
+<script src="mosaic.js?v=23"></script>
+<script src="pretend.js?v=23"></script>
+<script src="app.js?v=23"></script>
 </body>
 </html>

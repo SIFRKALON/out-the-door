@@ -1,5 +1,5 @@
-// Out the Door: "Time to TMPL". For each club, the soonest you could actually be inside,
-// using live train times all the way to the exit station (not schedules), plus the walk and a few minutes to change.
+// Places: live door-to-door time to TMPL clubs and grocery stores, using real-time arrivals
+// at the exit station, plus measured walks (and a few minutes to change, for the clubs).
 const CHANGE_MIN = 5;   // locker room: from the front desk to the sauna
 
 // Exit walks measured on Google Maps (station → club entrance).

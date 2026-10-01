@@ -1,4 +1,4 @@
-// Out the Door: data layer (MTA trains + alerts, weather, air quality, sun/moon).
+// Data layer (MTA trains + alerts, weather, air quality, sun/moon).
 // Calls render() (defined by the page) whenever fresh data arrives.
 
 const hm = t => { const d = new Date(t * 1000); return `${d.getHours() % 12 || 12}:${String(d.getMinutes()).padStart(2, "0")}`; };
@@ -124,7 +124,6 @@ function describeNow(c) {
 // Returns only things worth acting on in the next ~3 hours. Empty list = nothing to show.
 function weatherWarnings(w, now) {
   const h = w.hourly, out = [];
-  out.rain = false; out.snow = false;
   const idx = h.time.map((t, i) => i);
   const ahead = idx.filter(i => h.time[i] + 3600 > now && h.time[i] <= now + 3 * 3600);
   const past = idx.filter(i => h.time[i] + 3600 <= now);
@@ -138,8 +137,6 @@ function weatherWarnings(w, now) {
   const storm = ahead.some(i => h.weather_code[i] >= 95);
   const rainingNow = (w.current?.precipitation ?? 0) > 0;
   const rainSoon = max("precipitation_probability") >= 40 || sum("precipitation", ahead) >= 0.02;
-  out.snow = sum("snowfall", ahead) > 0;
-  out.rain = (w.current?.precipitation ?? 0) > 0 || max("precipitation_probability") >= 40 || sum("precipitation", ahead) >= 0.02;
   if (sum("snowfall", ahead) > 0) out.push(["Snow: wear boots", `About ${sum("snowfall", ahead).toFixed(1)} in expected by ${hm(now + 3 * 3600)}`]);
   if (storm) out.push(["Thunderstorms possible", `Starting around ${firstHour(i => h.weather_code[i] >= 95)}. Umbrella, and maybe wait it out`]);
   else if (rainingNow) out.push(["Raining now: umbrella", `${max("precipitation_probability")}% chance it keeps going`]);
