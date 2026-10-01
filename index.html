@@ -19,13 +19,11 @@
 
   /* ================= LINE (line map + mosaic) ================= */
   body.t-line {
-    background-color: #F1EEE6; color: #1B1C1A; font-family: "Archivo", "Helvetica Neue", Helvetica, Arial, sans-serif;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='48'%3E%3Crect width='96' height='48' fill='%23F1EEE6'/%3E%3Cg fill='%23FFFFFF' opacity='.55'%3E%3Crect x='2' y='2' width='44' height='3' rx='1.5'/%3E%3Crect x='50' y='2' width='44' height='3' rx='1.5'/%3E%3Crect x='26' y='26' width='44' height='3' rx='1.5'/%3E%3Crect x='-22' y='26' width='44' height='3' rx='1.5'/%3E%3Crect x='74' y='26' width='44' height='3' rx='1.5'/%3E%3C/g%3E%3Cg stroke='%23D8D0C0' stroke-width='1.5'%3E%3Cpath d='M0 .75H96M0 24.75H96M.75 0V24M48.75 0V24M24.75 24V48M72.75 24V48'/%3E%3C/g%3E%3C/svg%3E");
-    background-size: 96px 48px;
+    background-color: #F2EFE8; color: #1B1C1A; font-family: "Archivo", "Helvetica Neue", Helvetica, Arial, sans-serif;
   }
   .L { grid-template-columns: minmax(0, 1fr); max-width: 1180px; margin: 0 auto; padding: max(16px, env(safe-area-inset-top)) 16px max(20px, env(safe-area-inset-bottom)); display: grid; gap: 18px; }
-  .tess { display: grid; grid-auto-flow: column; grid-template-rows: repeat(3, 8px); grid-auto-columns: 8px; gap: 2px; overflow: hidden; padding: 4px; background: #F8F5EE; border-top: 3px solid #7A2E2A; border-bottom: 3px solid #7A2E2A; }
-  .tess i { display: block; width: 8px; height: 8px; }
+  .tess { display: flex; gap: 2px; height: 7px; overflow: hidden; }
+  .tess i { display: block; height: 7px; flex: none; border-radius: 1px; }
   .L-top { display: flex; align-items: center; gap: 12px; }
   .L-brand { font-family: "Cinzel", Georgia, serif; font-weight: 700; letter-spacing: 4px; font-size: 15px; flex: 1; white-space: nowrap; }
   @media (max-width: 480px) { .L-brand { letter-spacing: 2px; font-size: 13px; } .L-wx { display: none; } .L-top { gap: 8px; } .toggle { font-size: 12px; padding: 5px 10px; } }
@@ -55,9 +53,9 @@
   .T-how { font-family: "Archivo Narrow", sans-serif; font-size: 14px; color: #55584F; margin-top: 3px; }
   .T-how b { color: #1B1C1A; }
 
-  .L-plaque { position: relative; background: #F8F5EE; border: 12px solid #7A2E2A; border-image: repeating-linear-gradient(45deg, #7A2E2A 0 7px, #C08A2E 7px 10px, #7A2E2A 10px 17px, #2F6B5E 17px 20px) 12; outline: 2px solid #C08A2E; outline-offset: -20px; padding: 24px 24px 20px; text-align: center; }
-  .L-plaque::before, .L-plaque::after { content: ""; position: absolute; top: 8px; width: 10px; height: 10px; background: #24427A; transform: rotate(45deg); }
-  .L-plaque::before { left: 8px; } .L-plaque::after { right: 8px; }
+  .L-plaque { position: relative; background: #FBF9F4; border: 1.5px solid #1B1C1A; padding: 30px 24px 22px; text-align: center; overflow: hidden; }
+  .L-plaque .tess { position: absolute; left: 0; right: 0; top: 0; height: 9px; gap: 2px; padding: 0; }
+  .L-plaque .tess i { height: 9px; border-radius: 0; }
   .L-head1 { font-weight: 800; font-size: clamp(34px, 9vw, 64px); line-height: 1; letter-spacing: -1.5px; white-space: nowrap; color: #1B1C1A; font-variant-numeric: tabular-nums; }
   .L-head1 em { font-style: normal; color: #24427A; }
   .L-head1.now { color: #7A2E2A; }
@@ -88,7 +86,7 @@
   .bullet { width: 34px; height: 34px; border-radius: 50%; color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 18px; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
   .L-track { position: relative; height: 34px; min-width: 60px; }
   .L-main > *, .H-main > * { min-width: 0; }
-  .L-track .rail { position: absolute; left: 0; right: 14px; top: 14px; height: 6px; border-radius: 3px; }
+  .L-track .rail { position: absolute; left: 0; right: 14px; top: 13px; height: 8px; }
   .L-track .stn { position: absolute; right: 0; top: 6px; width: 22px; height: 22px; border-radius: 50%; background: #F8F5EE; border: 5px solid #1B1C1A; }
   .L-track .car { position: absolute; top: 8px; width: 28px; height: 18px; border-radius: 5px; background: #1B1C1A; transition: left 1s linear; }
   .L-track .car::after { content: ""; position: absolute; left: 4px; right: 4px; top: 5px; height: 4px; background: #F1D48A; border-radius: 1px; }
@@ -97,7 +95,8 @@
   .L-info { text-align: right; min-width: 118px; }
   .L-leave { font-weight: 800; font-size: 20px; font-variant-numeric: tabular-nums; }
   .L-stn { margin-top: 4px; }
-  .tablet { display: inline-block; font-family: "Cinzel", Georgia, serif; font-weight: 700; font-size: 11px; letter-spacing: 2px; padding: 3px 8px 2px; background: #F8F5EE; color: var(--tc, #2F6B5E); border: 3px solid var(--tc, #2F6B5E); outline: 1px solid var(--tb, #C08A2E); outline-offset: -6px; }
+  .tablet { display: inline-flex; align-items: center; gap: 7px; font-family: "Cinzel", Georgia, serif; font-weight: 700; font-size: 11.5px; letter-spacing: 2px; color: var(--tc, #2F6B5E); }
+  .tablet::before { content: ""; width: 9px; height: 9px; flex: none; background: linear-gradient(135deg, var(--tc, #2F6B5E) 0 50%, var(--tb, #C08A2E) 50% 100%); }
   .L-next { font-family: "Archivo Narrow", sans-serif; font-size: 13px; color: #6B6E68; }
   .L-foot { display: flex; flex-wrap: wrap; gap: 6px 18px; justify-content: space-between; font-family: "Archivo Narrow", sans-serif; font-size: 14px; color: #55584F; }
   .L-empty { padding: 18px 0; color: #55584F; }
@@ -151,7 +150,7 @@
 <canvas id="L-fx" aria-hidden="true"></canvas>
 <div class="L" id="ui-line">
   <header>
-    <div class="tess" id="L-tess" aria-hidden="true"></div>
+    <div class="tess" data-tess aria-hidden="true"></div>
     <div class="L-top" style="margin-top: 10px">
       <span class="L-brand">OUT THE DOOR</span>
       <span class="L-wx" id="L-wx"></span>
@@ -164,6 +163,7 @@
   <div class="L-main">
     <div class="L-col">
       <section class="L-plaque" aria-live="polite">
+        <div class="tess" data-tess aria-hidden="true"></div>
         <div class="L-head1 quiet" id="L-head1">Listening for trains…</div>
         <div class="L-what" id="L-what"></div>
         <div class="L-sub" id="L-sub"></div>
@@ -254,13 +254,29 @@ document.querySelectorAll("[data-toggle]").forEach(b => b.addEventListener("clic
 
 // mosaic band
 const TESS = ["#7A2E2A", "#C08A2E", "#2F6B5E", "#24427A"];
-// a little meander in tesserae: 3 rows, repeating every 8 columns
-const KEY = ["11111101", "10000101", "10111101"];
-document.getElementById("L-tess").innerHTML = Array.from({ length: 200 * 3 }, (_, n) => {
-  const col = Math.floor(n / 3), row = n % 3;
-  const on = KEY[row][col % 8] === "1";
-  return `<i style="background:${on ? (Math.floor(col / 8) % 2 ? "#24427A" : "#2F6B5E") : (col % 2 ? "#C08A2E" : "#E9DFC9")}"></i>`;
-}).join("");
+// hand-laid tesserae: irregular widths, gentle tonal drift, mostly warm neutrals with a few colored stones
+const rnd = i => { const x = Math.sin(i * 12.9898 + 78.233) * 43758.5453; return x - Math.floor(x); };
+function shade(hex, f) {   // f > 0 lighter, < 0 darker
+  const n = parseInt(hex.slice(1), 16), c = [n >> 16, (n >> 8) & 255, n & 255];
+  return "#" + c.map(v => Math.round(f > 0 ? v + (255 - v) * f : v * (1 + f)).toString(16).padStart(2, "0")).join("");
+}
+const STONES = ["#7A2E2A", "#C08A2E", "#2F6B5E", "#24427A"];
+document.querySelectorAll("[data-tess]").forEach((el, k) => {
+  el.innerHTML = Array.from({ length: 220 }, (_, i) => {
+    const r = rnd(i + k * 500), w = 5 + Math.floor(rnd(i * 3 + k) * 9);
+    const base = r < 0.16 ? STONES[Math.floor(rnd(i + 9) * 4)] : "#D9D0BF";
+    return `<i style="width:${w}px;background:${shade(base, (rnd(i * 7 + k) - 0.5) * 0.18)}"></i>`;
+  }).join("");
+});
+// a train line laid in tesserae of its own color
+function mosaicRail(color, seed) {
+  let x = 0, stops = [];
+  for (let i = 0; x < 900; i++) {
+    const w = 6 + Math.floor(rnd(seed * 97 + i) * 7), c = shade(color, (rnd(seed * 31 + i) - 0.5) * 0.28);
+    stops.push(`${c} ${x}px ${x + w}px`, `transparent ${x + w}px ${x + w + 2}px`); x += w + 2;
+  }
+  return `linear-gradient(90deg, ${stops.join(", ")})`;
+}
 // station tablets: each stop has its own colors
 const TABLETS = { "Central Av": ["#7A2E2A", "#C08A2E"], "Myrtle Av–Broadway": ["#24427A", "#C08A2E"], "Jefferson St": ["#2F6B5E", "#7A2E2A"], "Morgan Av": ["#8A5A1E", "#24427A"],
   "Astor Place": ["#24427A", "#7A2E2A"], "Hell's Kitchen": ["#2F6B5E", "#C08A2E"], "West Village": ["#7A2E2A", "#2F6B5E"], "Avenue A": ["#8A5A1E", "#2F6B5E"], "Lexington": ["#24427A", "#C08A2E"] };
@@ -322,7 +338,7 @@ function renderLine(m) {
     if (map.dataset.keys !== keys.join()) {
       map.innerHTML = `<div class="sign"><span class="arrow">←</span>Trains to Manhattan</div>` + m.rows.map(r => `<div class="L-row" id="L-r${r.i}">
         <div class="bullet" style="background:${r.color}">${r.o.route}</div>
-        <div class="L-track"><div class="rail" style="background:${r.color}"></div><div class="stn"></div><div class="car"></div></div>
+        <div class="L-track"><div class="rail" style="background:${mosaicRail(r.color, r.i + 1)}"></div><div class="stn"></div><div class="car"></div></div>
         <div class="L-info"><div class="L-leave"></div><div class="L-stn"></div><div class="L-next"></div></div>
       </div>`).join("");
       map.dataset.keys = keys.join();
