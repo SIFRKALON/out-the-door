@@ -58,7 +58,6 @@ const Fx = (() => {
     pigeon:   { every: [60, 150], ok: c => !c.night && c.kind !== "storm" && c.kind !== "snow" },
     steam:    { every: c => c.cold ? [25, 55] : [120, 240], ok: () => true },
     leaves:   { every: [40, 90], ok: c => c.md >= 922 && c.md <= 1130 && c.kind !== "snow" },
-    train:    { every: [70, 150], ok: () => true },
     bats:     { every: [35, 70], ok: c => c.night && c.md >= 1024 && c.md <= 1101 },
     fireworks:{ every: [6, 14], ok: c => c.night && (c.md === 704 || c.md === 1231 || c.md === 101) },
   };
@@ -70,7 +69,6 @@ const Fx = (() => {
     if (kind === "pigeon") { const dir = Math.random() < 0.5 ? 1 : -1; sprites.push({ kind, t0: now, dur: rand(7, 10), dir, y: rand(0.12, 0.45) * h, s: rand(0.8, 1.2) }); }
     if (kind === "steam") sprites.push({ kind, t0: now, dur: 9, x: rand(0.1, 0.9) * w, stack: Math.random() < 0.3 });
     if (kind === "leaves") for (let i = 0; i < 7; i++) sprites.push({ kind: "leaf", t0: now + i * rand(0.4, 1.4), dur: rand(9, 14), x: rand(0, 1) * w, s: rand(0.8, 1.3), hue: i % 3, spin: rand(-2, 2) });
-    if (kind === "train") { const P = perimLen(); sprites.push({ kind, t0: now, dur: P / 85, dir: Math.random() < 0.5 ? 1 : -1, start: Math.random() * P }); }
     if (kind === "bats") for (let i = 0; i < 3; i++) sprites.push({ kind: "bat", t0: now + i * 0.6, dur: 9, dir: 1, y: rand(0.1, 0.35) * h + i * 18 });
     if (kind === "fireworks") sprites.push({ kind: "burst", t0: now, dur: 2.4, x: rand(0.15, 0.85) * w, y: rand(0.08, 0.35) * h, col: ["#F2C14E", "#E8735A", "#7FD6CF", "#F4EBD0"][Math.floor(rand(0, 4))] });
   }
@@ -130,19 +128,6 @@ const Fx = (() => {
         ctx.beginPath(); ctx.ellipse(0, 0, 7 * s.s, 3.6 * s.s, 0, 0, 6.29); ctx.fill();
         ctx.strokeStyle = "rgba(60,30,10,0.5)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-7 * s.s, 0); ctx.lineTo(7 * s.s, 0); ctx.stroke();
       }
-      if (s.kind === "train") {   // a little L train doing one lap around the edge of the screen
-        const P = perimLen(), head = (s.start + s.dir * p * P + P * 4) % P;
-        for (let car = 0; car < 3; car++) {
-          const q = perimPoint((head - s.dir * car * 25 + P * 4) % P);
-          ctx.save(); ctx.translate(q.x, q.y); ctx.rotate(q.a + (s.dir < 0 ? Math.PI : 0));
-          ctx.fillStyle = night ? "#C9CCD2" : "#A7A9AC";
-          ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-11, -4, 22, 8, 2.5) : ctx.rect(-11, -4, 22, 8); ctx.fill();
-          ctx.fillStyle = night ? "rgba(255,222,150,0.95)" : "rgba(40,48,60,0.65)";
-          for (let wx = -8; wx < 8; wx += 5) ctx.fillRect(wx, -2, 3, 2.4);
-          ctx.fillStyle = "#3E7FC1"; ctx.fillRect(-11, 2, 22, 1);   // a thin stripe
-          ctx.restore();
-        }
-      }
       if (s.kind === "bat") {   // Halloween week
         const x = -20 + p * (w + 40), y = s.y + Math.sin(now * 5 + s.t0) * 10, f = Math.sin(now * 18) * 6;
         ctx.fillStyle = "#11141C";
@@ -181,6 +166,33 @@ const Fx = (() => {
     const P = perimLen();
     ctx.fillStyle = night ? "rgba(233,200,106,0.16)" : "rgba(60,64,72,0.13)";
     for (let d = 0; d < P; d += 7) { const q = perimPoint(d); ctx.save(); ctx.translate(q.x, q.y); ctx.rotate(q.a); ctx.fillRect(-1, -4, 2, 8); ctx.restore(); }
+  }
+
+  // two little trains that always run: an L one way, an M the other, passing now and then
+  const TRAINS = [
+    { dir: 1,  speed: 38, offset: 0,   stripe: "#8A8D93", dot: "#A7A9AC" },   // L
+    { dir: -1, speed: 31, offset: 0.5, stripe: "#FF6319", dot: "#FF6319" },   // M
+  ];
+  function drawCar(q, flip, stripe, dot, front, night) {
+    ctx.save(); ctx.translate(q.x, q.y); ctx.rotate(q.a + (flip ? Math.PI : 0));
+    ctx.fillStyle = night ? "#C9CCD2" : "#A9ADB3";
+    ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-11, -4, 22, 8, 2.5) : ctx.rect(-11, -4, 22, 8); ctx.fill();
+    ctx.fillStyle = night ? "rgba(255,222,150,0.95)" : "rgba(40,48,60,0.65)";
+    for (let wx = -8; wx < 8; wx += 5) ctx.fillRect(wx, -2, 3, 2.4);
+    ctx.fillStyle = stripe; ctx.fillRect(-11, 2, 22, 1.2);
+    if (front) { ctx.fillStyle = dot; ctx.beginPath(); ctx.arc(9, -0.5, 2.2, 0, 6.29); ctx.fill();
+      if (night) { ctx.fillStyle = "rgba(255,240,200,0.9)"; ctx.fillRect(10.5, -3, 1, 6); } }   // headlight at night
+    ctx.restore();
+  }
+  function drawTrains(t, night) {
+    const P = perimLen();
+    TRAINS.forEach(tr => {
+      const head = ((tr.offset * P + tr.dir * t * tr.speed) % P + P) % P;
+      for (let car = 0; car < 3; car++) {
+        const q = perimPoint(((head - tr.dir * car * 25) % P + P) % P);
+        drawCar(q, tr.dir < 0, tr.stripe, tr.dot, car === 0, night);
+      }
+    });
   }
 
   // warm nights: fireflies drifting low on the page
@@ -314,6 +326,7 @@ const Fx = (() => {
     if (!reduce) schedule(ctxInfo, t);
     if (night && (wx.feels ?? 0) >= 65 && ctxInfo.clear) drawFireflies(t);
     drawTrack(night);
+    drawTrains(t, night);
     drawSprites(t, night);
 
     // cold: frost creeping in from the corners. hot: warm haze.
