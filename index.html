@@ -25,10 +25,10 @@
   .tess { display: flex; gap: 2px; height: 7px; overflow: hidden; }
   .tess i { display: block; height: 7px; flex: none; border-radius: 1px; }
   /* jewel tesserae: gold smalti and teal glass that catch the light now and then */
-  .tess i.gold { background: linear-gradient(120deg, #7E5E17 0%, #C9A23E 30%, #FFF0B3 48%, #E2BC55 56%, #8A6A1E 100%); background-size: 320% 100%; animation: glint 7s ease-in-out infinite; animation-delay: var(--d); box-shadow: inset 0 0 0 0.5px rgba(255,240,180,0.6); }
-  .tess i.teal { background: linear-gradient(120deg, #0A3F42 0%, #157A78 32%, #8FE3DA 48%, #1D8C88 58%, #0B4A4C 100%); background-size: 320% 100%; animation: glint 9s ease-in-out infinite; animation-delay: var(--d); }
-  @keyframes glint { 0%, 70% { background-position: 100% 0; } 85% { background-position: 0% 0; } 100% { background-position: 0% 0; } }
-  @media (prefers-reduced-motion: reduce) { .tess i.gold, .tess i.teal { animation: none; background-position: 40% 0; } }
+  /* jewel tesserae: glass and smalti that catch the light. Colors come in as --a (deep), --b (body), --h (highlight). */
+  .jw { background: linear-gradient(120deg, var(--a) 0%, var(--b) 30%, var(--h) 47%, var(--b) 57%, var(--a) 100%); background-size: 320% 100%; animation: glint var(--t, 4s) ease-in-out infinite; animation-delay: var(--d, 0s); }
+  @keyframes glint { 0%, 55% { background-position: 100% 0; } 78% { background-position: 0% 0; } 100% { background-position: 0% 0; } }
+  @media (prefers-reduced-motion: reduce) { .jw { animation: none; background-position: 40% 0; } }
   .L-top { display: flex; align-items: center; gap: 12px; }
   .L-brand { font-family: "Cinzel", Georgia, serif; font-weight: 700; letter-spacing: 4px; font-size: 15px; flex: 1; white-space: nowrap; }
   @media (max-width: 480px) { .L-brand { letter-spacing: 2px; font-size: 13px; } .L-wx { display: none; } .L-top { gap: 8px; } .toggle { font-size: 12px; padding: 5px 10px; } }
@@ -91,7 +91,8 @@
   .bullet { width: 34px; height: 34px; border-radius: 50%; color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 18px; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
   .L-track { position: relative; height: 34px; min-width: 60px; }
   .L-main > *, .H-main > * { min-width: 0; }
-  .L-track .rail { position: absolute; left: 0; right: 14px; top: 13px; height: 8px; }
+  .L-track .rail { position: absolute; left: 0; right: 14px; top: 13px; height: 8px; display: flex; gap: 2px; overflow: hidden; }
+  .L-track .rail i { flex: none; height: 8px; display: block; }
   .L-track .stn { position: absolute; right: 0; top: 6px; width: 22px; height: 22px; border-radius: 50%; background: #F8F5EE; border: 5px solid #1B1C1A; }
   .L-track .car { position: absolute; top: 8px; width: 28px; height: 18px; border-radius: 5px; background: #1B1C1A; transition: left 1s linear; }
   .L-track .car::after { content: ""; position: absolute; left: 4px; right: 4px; top: 5px; height: 4px; background: #F1D48A; border-radius: 1px; }
@@ -270,26 +271,30 @@ function shade(hex, f) {   // f > 0 lighter, < 0 darker
   return "#" + c.map(v => Math.round(f > 0 ? v + (255 - v) * f : v * (1 + f)).toString(16).padStart(2, "0")).join("");
 }
 const STONES = ["#7A2E2A", "#C08A2E", "#2F6B5E", "#24427A"];
+const GOLD = { a: "#7E5E17", b: "#C9A23E", h: "#FFF0B3" }, TEAL = { a: "#0A3F42", b: "#157A78", h: "#8FE3DA" };
+const jewelOf = c => ({ a: shade(c, -0.4), b: c, h: shade(c, 0.62) });
+// a shimmering piece; t = seconds between glints, d = where in that cycle it starts
+const jewel = (w, j, seed, h = "") => `<i class="jw" style="width:${w}px;${h}--a:${j.a};--b:${j.b};--h:${j.h};--t:${(3 + rnd(seed) * 2.5).toFixed(1)}s;--d:${(rnd(seed * 3 + 1) * -6).toFixed(2)}s"></i>`;
 document.querySelectorAll("[data-tess]").forEach((el, k) => {
   el.innerHTML = Array.from({ length: 220 }, (_, i) => {
-    const r = rnd(i + k * 500), w = 5 + Math.floor(rnd(i * 3 + k) * 9);
-    const d = `--d:${(rnd(i * 11 + k) * -9).toFixed(2)}s`;
-    if (r < 0.06) return `<i class="gold" style="width:${w}px;${d}"></i>`;
-    if (r < 0.10) return `<i class="teal" style="width:${w}px;${d}"></i>`;
-    const base = r < 0.16 ? STONES[Math.floor(rnd(i + 9) * 4)] : "#D9D0BF";
-    return `<i style="width:${w}px;background:${shade(base, (rnd(i * 7 + k) - 0.5) * 0.18)}"></i>`;
+    const r = rnd(i + k * 500), w = 5 + Math.floor(rnd(i * 3 + k) * 9), seed = i * 11 + k * 7;
+    if (r < 0.07) return jewel(w, GOLD, seed);
+    if (r < 0.12) return jewel(w, TEAL, seed);
+    if (r < 0.19) return jewel(w, jewelOf(STONES[Math.floor(rnd(i + 9) * 4)]), seed);
+    return `<i style="width:${w}px;background:${shade("#D9D0BF", (rnd(i * 7 + k) - 0.5) * 0.18)}"></i>`;
   }).join("");
 });
-// a train line laid in tesserae of its own color
 function mosaicRail(color, seed) {
-  let x = 0, stops = [];
-  for (let i = 0; x < 900; i++) {
-    const w = 6 + Math.floor(rnd(seed * 97 + i) * 7);
-    const j = rnd(seed * 53 + i);
-    const c = j < 0.035 ? "#D9B24A" : j < 0.05 ? "#1D8C88" : shade(color, (rnd(seed * 31 + i) - 0.5) * 0.28);
-    stops.push(`${c} ${x}px ${x + w}px`, `transparent ${x + w}px ${x + w + 2}px`); x += w + 2;
+  let out = "", x = 0;
+  for (let i = 0; x < 1000; i++) {
+    const w = 6 + Math.floor(rnd(seed * 97 + i) * 7), j = rnd(seed * 53 + i);
+    out += j < 0.04 ? jewel(w, GOLD, seed * 131 + i)
+         : j < 0.06 ? jewel(w, TEAL, seed * 137 + i)
+         : j < 0.17 ? jewel(w, jewelOf(color), seed * 139 + i)
+         : `<i style="width:${w}px;background:${shade(color, (rnd(seed * 31 + i) - 0.5) * 0.28)}"></i>`;
+    x += w + 2;
   }
-  return `linear-gradient(90deg, ${stops.join(", ")})`;
+  return out;
 }
 // station tablets: each stop has its own colors
 const TABLETS = { "Central Av": ["#7A2E2A", "#C08A2E"], "Myrtle Av–Broadway": ["#24427A", "#C08A2E"], "Jefferson St": ["#2F6B5E", "#7A2E2A"], "Morgan Av": ["#8A5A1E", "#24427A"],
@@ -356,7 +361,7 @@ function renderLine(m) {
     if (map.dataset.keys !== keys.join()) {
       map.innerHTML = `<div class="sign"><span class="arrow">←</span>Trains to Manhattan</div>` + m.rows.map(r => `<div class="L-row" id="L-r${r.i}">
         <div class="bullet" style="background:${r.color}">${r.o.route}</div>
-        <div class="L-track"><div class="rail" style="background:${mosaicRail(r.color, r.i + 1)}"></div><div class="stn"></div><div class="car"></div></div>
+        <div class="L-track"><div class="rail">${mosaicRail(r.color, r.i + 1)}</div><div class="stn"></div><div class="car"></div></div>
         <div class="L-info"><div class="L-line1"><span class="L-leave"></span><span class="L-walk"><svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="2.6" r="1.4" fill="currentColor" stroke="none"/><path d="M8.5 5.5 7 10l-2.5 4.5M7 10l3 1.5 1 3M8.5 5.5l2.5 2 2 .5M8.5 5.5 6 7l-1 2.5"/></svg>${shownWalk(r.o.walk)} min walk</span></div><div class="L-stn"></div><div class="L-next"></div></div>
       </div>`).join("");
       map.dataset.keys = keys.join();
