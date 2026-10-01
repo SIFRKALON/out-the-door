@@ -20,15 +20,16 @@
   /* ================= LINE (line map + mosaic) ================= */
   body.t-line {
     background-color: #F1EEE6; color: #1B1C1A; font-family: "Archivo", "Helvetica Neue", Helvetica, Arial, sans-serif;
-    background-image: linear-gradient(#DDD6C7 1px, transparent 1px), linear-gradient(90deg, #DDD6C7 1px, transparent 1px);
-    background-size: 48px 24px, 48px 48px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='48'%3E%3Crect width='96' height='48' fill='%23F1EEE6'/%3E%3Cg fill='%23FFFFFF' opacity='.55'%3E%3Crect x='2' y='2' width='44' height='3' rx='1.5'/%3E%3Crect x='50' y='2' width='44' height='3' rx='1.5'/%3E%3Crect x='26' y='26' width='44' height='3' rx='1.5'/%3E%3Crect x='-22' y='26' width='44' height='3' rx='1.5'/%3E%3Crect x='74' y='26' width='44' height='3' rx='1.5'/%3E%3C/g%3E%3Cg stroke='%23D8D0C0' stroke-width='1.5'%3E%3Cpath d='M0 .75H96M0 24.75H96M.75 0V24M48.75 0V24M24.75 24V48M72.75 24V48'/%3E%3C/g%3E%3C/svg%3E");
+    background-size: 96px 48px;
   }
   .L { grid-template-columns: minmax(0, 1fr); max-width: 1180px; margin: 0 auto; padding: max(16px, env(safe-area-inset-top)) 16px max(20px, env(safe-area-inset-bottom)); display: grid; gap: 18px; }
-  .tess { display: flex; height: 10px; overflow: hidden; }
-  .tess i { flex: 0 0 10px; height: 10px; margin-right: 2px; }
+  .tess { display: grid; grid-auto-flow: column; grid-template-rows: repeat(3, 8px); grid-auto-columns: 8px; gap: 2px; overflow: hidden; padding: 4px; background: #F8F5EE; border-top: 3px solid #7A2E2A; border-bottom: 3px solid #7A2E2A; }
+  .tess i { display: block; width: 8px; height: 8px; }
   .L-top { display: flex; align-items: center; gap: 12px; }
   .L-brand { font-family: "Cinzel", Georgia, serif; font-weight: 700; letter-spacing: 4px; font-size: 15px; flex: 1; white-space: nowrap; }
   @media (max-width: 480px) { .L-brand { letter-spacing: 2px; font-size: 13px; } .L-wx { display: none; } .L-top { gap: 8px; } .toggle { font-size: 12px; padding: 5px 10px; } }
+  .sclock { width: 34px; height: 34px; flex: none; }
   .L-clock { font-weight: 600; font-variant-numeric: tabular-nums; color: #55584F; }
   .toggle { border: 2px solid currentColor; background: transparent; color: inherit; padding: 6px 12px; min-height: 40px; border-radius: 999px; font-size: 14px; font-weight: 600; }
   #L-fx { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 0; }
@@ -50,11 +51,13 @@
   .T-row.top .T-min { font-size: 56px; color: #7A2E2A; }
   .T-doing { font-size: 19px; font-weight: 800; }
   .T-row.top .T-doing { font-size: 24px; }
-  .T-club { font-family: "Cinzel", Georgia, serif; font-size: 12px; letter-spacing: 2px; color: #2F6B5E; margin-top: 2px; }
+  .T-club { margin-top: 4px; }
   .T-how { font-family: "Archivo Narrow", sans-serif; font-size: 14px; color: #55584F; margin-top: 3px; }
   .T-how b { color: #1B1C1A; }
-  .T-head { font-family: "Cinzel", Georgia, serif; letter-spacing: 3px; font-size: 13px; padding: 12px 0 4px; color: #55584F; }
-  .L-plaque { background: #F8F5EE; border: 8px solid #7A2E2A; outline: 2px solid #C08A2E; outline-offset: -14px; padding: 20px 22px 18px; text-align: center; }
+
+  .L-plaque { position: relative; background: #F8F5EE; border: 12px solid #7A2E2A; border-image: repeating-linear-gradient(45deg, #7A2E2A 0 7px, #C08A2E 7px 10px, #7A2E2A 10px 17px, #2F6B5E 17px 20px) 12; outline: 2px solid #C08A2E; outline-offset: -20px; padding: 24px 24px 20px; text-align: center; }
+  .L-plaque::before, .L-plaque::after { content: ""; position: absolute; top: 8px; width: 10px; height: 10px; background: #24427A; transform: rotate(45deg); }
+  .L-plaque::before { left: 8px; } .L-plaque::after { right: 8px; }
   .L-head1 { font-weight: 800; font-size: clamp(34px, 9vw, 64px); line-height: 1; letter-spacing: -1.5px; white-space: nowrap; color: #1B1C1A; font-variant-numeric: tabular-nums; }
   .L-head1 em { font-style: normal; color: #24427A; }
   .L-head1.now { color: #7A2E2A; }
@@ -72,7 +75,10 @@
   .L-chip { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; background: #24427A; color: #F8F5EE; font-family: "Archivo Narrow", sans-serif; font-size: 11px; letter-spacing: 0.5px; vertical-align: 2px; }
   .L-alert { background: #24427A; color: #F8F5EE; border: 3px solid #F8F5EE; outline: 2px solid #24427A; padding: 10px 14px; font-size: 15px; line-height: 1.35; }
   .L-alert small { display: block; font-family: "Cinzel", serif; letter-spacing: 3px; font-size: 11px; opacity: 0.85; margin-bottom: 3px; }
-  .L-map { background: #F8F5EE; border: 2px solid #1B1C1A; padding: 8px 18px; }
+  .L-map { background: #F8F5EE; border: 2px solid #1B1C1A; padding: 0 18px 8px; }
+  .sign { margin: 0 -18px 4px; background: #141414; color: #FFFFFF; padding: 9px 18px 8px; border-top: 4px solid #141414; box-shadow: inset 0 2px 0 #FFFFFF; font-weight: 700; font-size: 15px; letter-spacing: 0.2px; display: flex; align-items: center; gap: 10px; }
+  .sign .dot { width: 22px; height: 22px; border-radius: 50%; color: #fff; display: inline-grid; place-items: center; font-size: 13px; font-weight: 800; }
+  .sign .arrow { font-size: 18px; line-height: 1; }
   .L-row { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 14px 0; border-bottom: 1px solid #E2DCCD; }
   .L-row:last-child { border-bottom: 0; }
   @media (max-width: 600px) {
@@ -90,7 +96,8 @@
   @keyframes pulse { 50% { box-shadow: 0 0 0 7px rgba(122,46,42,0.25); } }
   .L-info { text-align: right; min-width: 118px; }
   .L-leave { font-weight: 800; font-size: 20px; font-variant-numeric: tabular-nums; }
-  .L-stn { font-family: "Cinzel", Georgia, serif; font-size: 12px; letter-spacing: 2px; color: #2F6B5E; margin-top: 2px; }
+  .L-stn { margin-top: 4px; }
+  .tablet { display: inline-block; font-family: "Cinzel", Georgia, serif; font-weight: 700; font-size: 11px; letter-spacing: 2px; padding: 3px 8px 2px; background: #F8F5EE; color: var(--tc, #2F6B5E); border: 3px solid var(--tc, #2F6B5E); outline: 1px solid var(--tb, #C08A2E); outline-offset: -6px; }
   .L-next { font-family: "Archivo Narrow", sans-serif; font-size: 13px; color: #6B6E68; }
   .L-foot { display: flex; flex-wrap: wrap; gap: 6px 18px; justify-content: space-between; font-family: "Archivo Narrow", sans-serif; font-size: 14px; color: #55584F; }
   .L-empty { padding: 18px 0; color: #55584F; }
@@ -148,6 +155,7 @@
     <div class="L-top" style="margin-top: 10px">
       <span class="L-brand">OUT THE DOOR</span>
       <span class="L-wx" id="L-wx"></span>
+      <svg class="sclock" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="18.5" fill="#FFFFFF" stroke="#141414" stroke-width="3"/><g id="sc-ticks" stroke="#141414" stroke-width="2"></g><line id="sc-h" x1="20" y1="20" x2="20" y2="11" stroke="#141414" stroke-width="3" stroke-linecap="round"/><line id="sc-m" x1="20" y1="20" x2="20" y2="6" stroke="#141414" stroke-width="2" stroke-linecap="round"/><line id="sc-s" x1="20" y1="23" x2="20" y2="5" stroke="#B5402B" stroke-width="1"/><circle cx="20" cy="20" r="1.8" fill="#141414"/></svg>
       <span class="L-clock" id="L-clock"></span>
       <button class="toggle" type="button" data-toggle>Neighborhood</button>
     </div>
@@ -246,7 +254,24 @@ document.querySelectorAll("[data-toggle]").forEach(b => b.addEventListener("clic
 
 // mosaic band
 const TESS = ["#7A2E2A", "#C08A2E", "#2F6B5E", "#24427A"];
-document.getElementById("L-tess").innerHTML = Array.from({ length: 120 }, (_, i) => `<i style="background:${TESS[i % 4]}"></i>`).join("");
+// a little meander in tesserae: 3 rows, repeating every 8 columns
+const KEY = ["11111101", "10000101", "10111101"];
+document.getElementById("L-tess").innerHTML = Array.from({ length: 200 * 3 }, (_, n) => {
+  const col = Math.floor(n / 3), row = n % 3;
+  const on = KEY[row][col % 8] === "1";
+  return `<i style="background:${on ? (Math.floor(col / 8) % 2 ? "#24427A" : "#2F6B5E") : (col % 2 ? "#C08A2E" : "#E9DFC9")}"></i>`;
+}).join("");
+// station tablets: each stop has its own colors
+const TABLETS = { "Central Av": ["#7A2E2A", "#C08A2E"], "Myrtle Av–Broadway": ["#24427A", "#C08A2E"], "Jefferson St": ["#2F6B5E", "#7A2E2A"], "Morgan Av": ["#8A5A1E", "#24427A"],
+  "Astor Place": ["#24427A", "#7A2E2A"], "Hell's Kitchen": ["#2F6B5E", "#C08A2E"], "West Village": ["#7A2E2A", "#2F6B5E"], "Avenue A": ["#8A5A1E", "#2F6B5E"], "Lexington": ["#24427A", "#C08A2E"] };
+const tablet = name => { const [c, b] = TABLETS[name] || ["#2F6B5E", "#C08A2E"]; return `<span class="tablet" style="--tc:${c};--tb:${b}">${esc(name.toUpperCase())}</span>`; };
+document.getElementById("sc-ticks").innerHTML = Array.from({ length: 12 }, (_, i) => { const a = i * Math.PI / 6; return `<line x1="${20 + Math.sin(a) * 14.5}" y1="${20 - Math.cos(a) * 14.5}" x2="${20 + Math.sin(a) * 17}" y2="${20 - Math.cos(a) * 17}"/>`; }).join("");
+function stationClock() {
+  const d = new Date(), h = d.getHours() % 12 + d.getMinutes() / 60, mm = d.getMinutes() + d.getSeconds() / 60;
+  document.getElementById("sc-h").setAttribute("transform", `rotate(${h * 30} 20 20)`);
+  document.getElementById("sc-m").setAttribute("transform", `rotate(${mm * 6} 20 20)`);
+  document.getElementById("sc-s").setAttribute("transform", `rotate(${d.getSeconds() * 6} 20 20)`);
+}
 
 // ---------- shared model ----------
 const mins = s => Math.max(0, Math.floor(s / 60));
@@ -267,6 +292,7 @@ function model() {
 const TRACK_WINDOW = 15 * 60;   // a car starts its run 15 min before you need to leave
 function renderLine(m) {
   document.getElementById("L-clock").textContent = hm(m.now);
+  stationClock();
   const head = document.getElementById("L-head1"), b = m.best;
   if (!b) {
     head.textContent = updated ? "No trains right now" : "Listening for trains…"; head.className = "L-head1 quiet";
@@ -289,12 +315,12 @@ function renderLine(m) {
   document.getElementById("L-alerts").innerHTML = m.alerts.map(a => `<div class="L-alert"><small>${a.when.toUpperCase()}${a.type ? " · " + esc(a.type).toUpperCase() : ""}</small>${a.html}</div>`).join("");
 
   const map = document.getElementById("L-map");
-  if (!m.rows.length) { map.innerHTML = `<div class="L-empty">${updated ? "Nothing catchable right now." : "Loading trains…"}</div>`; }
+  if (!m.rows.length) { map.dataset.keys = ""; map.innerHTML = `<div class="sign"><span class="arrow">←</span>Trains to Manhattan</div><div class="L-empty">${updated ? "Nothing catchable right now." : "Loading trains…"}</div>`; }
   else {
     // keep row elements stable so the cars glide instead of jumping
     const keys = m.rows.map(r => "r" + r.i);
     if (map.dataset.keys !== keys.join()) {
-      map.innerHTML = m.rows.map(r => `<div class="L-row" id="L-r${r.i}">
+      map.innerHTML = `<div class="sign"><span class="arrow">←</span>Trains to Manhattan</div>` + m.rows.map(r => `<div class="L-row" id="L-r${r.i}">
         <div class="bullet" style="background:${r.color}">${r.o.route}</div>
         <div class="L-track"><div class="rail" style="background:${r.color}"></div><div class="stn"></div><div class="car"></div></div>
         <div class="L-info"><div class="L-leave"></div><div class="L-stn"></div><div class="L-next"></div></div>
@@ -309,7 +335,7 @@ function renderLine(m) {
       el.classList.toggle("go", x.leave < 60);
       el.querySelector(".L-leave").textContent = x.leave < 60 ? "Leave now" : `Leave in ${mins(x.leave)}`;
       const hasNotice = m.alertRoutes.has(r.o.route);
-      el.querySelector(".L-stn").innerHTML = esc(r.o.station.toUpperCase()) + (hasNotice ? '<span class="L-chip">notice</span>' : "");
+      el.querySelector(".L-stn").innerHTML = tablet(r.o.station) + (hasNotice ? '<span class="L-chip">notice</span>' : "");
       const later = r.catchable.slice(1, 3).map(y => y.leave < 60 ? "now" : mins(y.leave)).join(", ");
       el.querySelector(".L-next").textContent = `to ${x.terminal}${later ? ` · then ${later} min` : ""}`;
     });
@@ -321,9 +347,9 @@ function renderLine(m) {
   tEl.hidden = !tm;
   if (tm) {
     const clubs = tmplTimes(m.rows, m.now);
-    tEl.innerHTML = `<div class="T-head">YOU COULD BE…</div>` + clubs.map((c, n) => c.best ? `<div class="T-row${n === 0 ? " top" : ""}">
+    tEl.innerHTML = `<div class="sign"><span class="arrow">→</span>Time to TMPL · you could be…</div>` + clubs.map((c, n) => c.best ? `<div class="T-row${n === 0 ? " top" : ""}">
         <div class="T-min">${c.mins}<small>min</small></div>
-        <div><div class="T-doing">${c.doing}</div><div class="T-club">${c.name.toUpperCase()}</div>
+        <div><div class="T-doing">${c.doing}</div><div class="T-club">${tablet(c.name)}</div>
         <div class="T-how"><b>${c.best.route}</b> from ${c.best.from} · ${c.best.leave < 60 ? "leave now" : `leave in ${mins(c.best.leave)}`} · off at ${c.best.exit}</div></div>
       </div>` : `<div class="T-row"><div class="T-min">–</div><div><div class="T-doing">${c.doing}</div><div class="T-club">${c.name.toUpperCase()}</div><div class="T-how">No live route right now</div></div></div>`).join("");
   }
