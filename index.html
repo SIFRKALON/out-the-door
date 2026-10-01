@@ -31,7 +31,7 @@
   @media (prefers-reduced-motion: reduce) { .jw { animation: none; background-position: 40% 0; } .L-track .rail, .L-track .car { animation: none; } }
   .L-top { display: flex; align-items: center; gap: 12px; }
   .L-spacer { flex: 1; }
-  @media (max-width: 480px) { .L-top { gap: 8px; } .L-wx { font-size: 13px; } }
+  @media (max-width: 480px) { .L-top { gap: 8px; } .L-wx { font-size: 13px; white-space: nowrap; } .wxl { display: none; } }
   .L-sig { display: flex; align-items: center; gap: 14px; width: 100%; justify-content: space-between; margin-top: 10px; }
   .L-foot .toggle { min-height: 34px; font-size: 13px; padding: 4px 12px; border-width: 1.5px; }
   .sig { font-family: "Cinzel", Georgia, serif; font-size: 11px; letter-spacing: 4px; opacity: 0.55; }
@@ -77,7 +77,7 @@
   .L-what b { font-weight: 800; }
   .L-sub { color: #55584F; font-family: "Archivo Narrow", sans-serif; font-size: 15px; margin-top: 4px; }
   .L-side { display: grid; gap: 12px; }
-  .L-note { background: #F8F5EE; border: 2px solid #C08A2E; padding: 10px 14px; }
+  .L-note { background: #F8F5EE; border: 2px solid #C08A2E; border-left-width: 8px; padding: 10px 14px; }
   .L-note b { display: block; font-size: 16px; }
   .L-note span { font-family: "Archivo Narrow", sans-serif; font-size: 14px; color: #55584F; }
   .L-notices { background: rgba(248,245,238,0.92); border: 1px solid #B9B09C; }
@@ -218,6 +218,7 @@
   </header>
   <div class="L-main">
     <div class="L-col">
+      <div id="L-pack" class="L-col"></div>
       <section class="L-plaque" aria-live="polite">
         <canvas id="plaque-bg" aria-hidden="true"></canvas>
         <div class="L-head1 quiet" id="L-head1">Listening for trains…</div>
@@ -228,7 +229,6 @@
       <section class="L-map" id="L-tmpl" aria-label="Time to each TMPL club" hidden></section>
     </div>
     <div class="L-col">
-      <div id="L-pack" class="L-col"></div>
       <details class="L-notices" id="L-notices" hidden><summary id="L-notices-sum">Service notices</summary><div id="L-alerts"></div></details>
     </div>
   </div>
@@ -247,6 +247,7 @@
   <div class="H-main">
     <div class="H-col">
       <canvas class="H-scene" id="H-scene" width="192" height="108" role="img" aria-label="Pixel street: your building, the elevated M, Central Av station"></canvas>
+      <section class="H-panel" id="H-pack" hidden><div class="H-label">PACK</div><div id="H-pack-items"></div></section>
       <section class="H-box" aria-live="polite">
         <div class="H-label">QUEST · INTO THE CITY</div>
         <div class="H-quest" id="H-quest">Listening for trains…</div>
@@ -254,7 +255,6 @@
     </div>
     <div class="H-col">
       <section class="H-panel"><div class="H-label" id="H-routes-label">OTHER ROUTES</div><div id="H-routes"></div></section>
-      <section class="H-panel" id="H-pack" hidden><div class="H-label">PACK</div><div id="H-pack-items"></div></section>
       <details class="H-panel H-notices" id="H-notices" hidden><summary class="H-label" id="H-notices-sum">NOTICES</summary><div class="H-col" id="H-alerts" style="padding-top:10px"></div></details>
       <footer class="H-foot">
         <button class="H-made" type="button" id="H-made">I made it out</button>
@@ -523,7 +523,7 @@ function renderLine(m) {
     document.getElementById("L-sub").textContent = `toward ${x.terminal} · arrives ${hm(x.t)} · ${shownWalk(b.o.walk)} min walk`;
   }
   const wx = wxNow();
-  document.getElementById("L-wx").textContent = wx ? `${wx.temp}° · ${wx.label}` : "";
+  document.getElementById("L-wx").innerHTML = wx ? `${wx.temp}°<span class="wxl"> · ${esc(wx.label)}</span>` : "";
   const wasDark = document.body.classList.contains("dark");
   document.body.classList.toggle("dark", Fx.isNight());
   if (wasDark !== document.body.classList.contains("dark")) paintPlaque();
