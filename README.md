@@ -8,3 +8,10 @@ from Bushwick (M, J, Z, L), plus a weather heads-up only when you need to do som
 - Leave time = arrival − walk time − 1 min.
 
 Edit `OPTIONS` (stations and walk minutes) and `HOME` near the top of `index.html`.
+
+Also shows, only when relevant:
+- MTA service alerts for your lines, between your stations and Manhattan (active now or starting within 12 hours)
+- Air quality warnings (US AQI ≥ 101, Open-Meteo)
+- Sunset/sunrise, plus moonrise around a full moon and a note at new moon (SunCalc, computed on the device)
+
+`suncalc.js` is SunCalc 1.9.0 by Vladimir Agafonkin (BSD-2-Clause, see `suncalc-LICENSE.txt`).

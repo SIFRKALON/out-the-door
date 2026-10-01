@@ -18,6 +18,12 @@
   .what { font-size: 17px; }
   .meta, .later { color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
   .none { color: var(--muted); }
+  #sky { color: var(--muted); font-size: 14px; margin: -6px 0 12px; }
+  #sky:empty { display: none; }
+  #alerts { display: grid; gap: 8px; margin-bottom: 8px; }
+  #alerts:empty { display: none; }
+  .alert { border: 2px dashed var(--fg); padding: 10px 12px; font-size: 15px; }
+  .alert small { display: block; color: var(--muted); font-size: 13px; margin-bottom: 2px; }
   #weather { display: grid; gap: 8px; margin-bottom: 14px; }
   #weather:empty { display: none; }
   .warn { border: 2px solid var(--fg); padding: 10px 12px; }
@@ -28,10 +34,13 @@
 </head>
 <body>
 <h1><span>Out the Door</span><span id="clock"></span></h1>
+<div id="sky"></div>
+<div id="alerts"></div>
 <div id="weather"></div>
 <div id="list"><div class="none">Loading trains…</div></div>
 <div id="status"></div>
 
+<script src="suncalc.js"></script>
 <script>
 // ---------- settings ----------
 const BUFFER_MIN = 1;                      // extra slack on top of the walk
@@ -173,12 +182,91 @@ function weatherWarnings(w, now) {
   return out;
 }
 
+// ---------- air quality (Open-Meteo, US AQI) ----------
+const AIR_URL = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${HOME.lat}&longitude=${HOME.lon}` +
+  "&hourly=us_aqi&forecast_hours=4&timeformat=unixtime&timezone=America%2FNew_York";
+let airWarnings = [];
+
+function airQualityWarnings(a, now) {
+  const vals = a.hourly.time.map((t, i) => [t, a.hourly.us_aqi[i]])
+    .filter(([t, v]) => v != null && t + 3600 > now && t <= now + 3 * 3600).map(([, v]) => v);
+  if (!vals.length) return [];
+  const aqi = Math.round(Math.max(...vals));
+  if (aqi >= 201) return [["Very unhealthy air: stay in or wear an N95", `Air quality index ${aqi}`]];
+  if (aqi >= 151) return [["Unhealthy air: consider a mask", `Air quality index ${aqi}`]];
+  if (aqi >= 101) return [["Poor air quality", `Air quality index ${aqi}. Unhealthy for sensitive groups`]];
+  return [];
+}
+
 async function refreshWeather() {
-  try {
-    const w = await (await fetch(WEATHER_URL, { cache: "no-store" })).json();
-    warnings = weatherWarnings(w, Date.now() / 1000);
-  } catch (e) { /* keep last warnings; trains still work */ }
+  const now = Date.now() / 1000;
+  try { warnings = weatherWarnings(await (await fetch(WEATHER_URL, { cache: "no-store" })).json(), now); } catch (e) {}
+  try { airWarnings = airQualityWarnings(await (await fetch(AIR_URL, { cache: "no-store" })).json(), now); } catch (e) {}
   render();
+}
+
+// ---------- MTA service alerts ----------
+const ALERTS_URL = "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/camsys%2Fsubway-alerts.json";
+const MY_ROUTES = new Set(OPTIONS.map(o => o.route));
+// Stops from your stations into Manhattan. Alerts that only touch other stops (e.g. the L in Canarsie) are skipped.
+const RELEVANT_STOPS = new Set([
+  "L01", "L02", "L03", "L05", "L06", "L08", "L10", "L11", "L12", "L13", "L14", "L15",
+  "M10", "M11", "M12", "M13", "M14", "M16", "M18", "M19", "M20", "M21", "M22", "M23",
+  "D21", "D20", "D19", "D18", "D17", "D16", "D15", "F12", "F11",
+]);
+let alerts = [];
+
+const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+function cleanAlertText(t) {
+  return esc(t).replace(/\[[^\]]*icon\]\s*/gi, "").replace(/\[([A-Z0-9])\]/g, "<b>$1</b>").trim();
+}
+
+function serviceAlerts(feed, now) {
+  const seen = new Set(), out = [];
+  for (const e of feed.entity || []) {
+    const a = e.alert; if (!a) continue;
+    const ents = a.informed_entity || [];
+    const routes = [...new Set(ents.map(x => x.route_id).filter(r => MY_ROUTES.has(r)))];
+    if (!routes.length) continue;
+    const stops = ents.map(x => (x.stop_id || "").slice(0, 3)).filter(Boolean);
+    if (stops.length && !stops.some(s => RELEVANT_STOPS.has(s))) continue;
+    const periods = a.active_period || [{}];
+    const active = periods.some(p => (p.start || 0) <= now && (!p.end || p.end >= now));
+    const soon = periods.map(p => p.start).filter(t => t > now && t <= now + 12 * 3600).sort()[0];
+    if (!active && !soon) continue;
+    const text = (a.header_text?.translation || []).find(t => t.language === "en")?.text;
+    if (!text || seen.has(text)) continue;
+    seen.add(text);
+    out.push({ html: cleanAlertText(text), when: active ? "Now" : `From ${hm(soon)}`,
+               type: a["transit_realtime.mercury_alert"]?.alert_type || "", active });
+  }
+  return out.sort((x, y) => y.active - x.active).slice(0, 5);
+}
+
+async function refreshAlerts() {
+  try { alerts = serviceAlerts(await (await fetch(ALERTS_URL, { cache: "no-store" })).json(), Date.now() / 1000); } catch (e) {}
+  render();
+}
+
+// ---------- sunset and the moon (SunCalc, computed on the device) ----------
+function skyLine(now) {
+  if (!window.SunCalc) return "";
+  const d = new Date(now * 1000), tmr = new Date(d.getTime() + 864e5);
+  const sun = SunCalc.getTimes(d, HOME.lat, HOME.lon);
+  const parts = [];
+  if (d < sun.sunset) parts.push(`Sunset ${hm(sun.sunset / 1000)}`);
+  else parts.push(`Sunrise ${hm(SunCalc.getTimes(tmr, HOME.lat, HOME.lon).sunrise / 1000)}`);
+
+  // Moon only when it's worth looking up: around full moon (moonrise) or new moon (dark sky).
+  const { fraction, phase } = SunCalc.getMoonIllumination(d);
+  if (fraction >= 0.9) {
+    const rises = [SunCalc.getMoonTimes(d, HOME.lat, HOME.lon).rise, SunCalc.getMoonTimes(tmr, HOME.lat, HOME.lon).rise]
+      .filter(r => r && r.getTime() / 1000 > now - 1800);
+    const name = fraction >= 0.98 ? "Full moon" : phase < 0.5 ? "Nearly full moon" : "Just past full moon";
+    if (rises[0] && rises[0].getTime() / 1000 < now + 18 * 3600) parts.push(`${name} rises ${hm(rises[0] / 1000)}`);
+    else parts.push(name);
+  } else if (fraction <= 0.03) parts.push("New moon: darkest skies tonight");
+  return parts.join(" · ");
 }
 
 // ---------- display ----------
@@ -197,8 +285,11 @@ function render() {
   }).filter(r => r.catchable.length)
     .sort((a, b) => a.catchable[0].leave - b.catchable[0].leave);
 
+  document.getElementById("sky").textContent = skyLine(now);
+  document.getElementById("alerts").innerHTML = alerts.map(a =>
+    `<div class="alert"><small>${a.when}${a.type ? " · " + esc(a.type) : ""}</small>${a.html}</div>`).join("");
   document.getElementById("weather").innerHTML =
-    warnings.map(([t, d]) => `<div class="warn"><b>${t}</b><span>${d}</span></div>`).join("");
+    [...warnings, ...airWarnings].map(([t, d]) => `<div class="warn"><b>${t}</b><span>${d}</span></div>`).join("");
 
   const list = document.getElementById("list");
   if (!rows.length) {
@@ -224,10 +315,12 @@ function render() {
 
 refresh();
 refreshWeather();
+refreshAlerts();
 setInterval(refresh, REFRESH_SEC * 1000);
+setInterval(refreshAlerts, 2 * 60 * 1000);
 setInterval(refreshWeather, 10 * 60 * 1000);
 setInterval(render, 1000);
-document.addEventListener("visibilitychange", () => { if (!document.hidden) { refresh(); refreshWeather(); } });
+document.addEventListener("visibilitychange", () => { if (!document.hidden) { refresh(); refreshWeather(); refreshAlerts(); } });
 </script>
 </body>
 </html>
