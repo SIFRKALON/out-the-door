@@ -219,6 +219,8 @@ function render() {
 
   document.querySelectorAll("[data-view]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.view === view)));
   $("awake").setAttribute("aria-pressed", String(keepOn));
+  $("sound").setAttribute("aria-pressed", String(Sound.on));
+  if (Sound.on) Sound.set({ night: dark, wx });
   $("awake").textContent = keepOn ? "Screen stays on" : "Keep screen on";
   $("skyline").textContent = m.sky;
   $("status").textContent = m.status;
@@ -243,6 +245,11 @@ $("head").addEventListener("click", e => {   // the gold number shines when you 
   em.classList.remove("flash"); void em.offsetWidth; em.classList.add("flash");
 });
 
+$("sound").addEventListener("click", () => {
+  if (Sound.on) { Sound.stop(); store.set("otd-sound", "0"); toast("Quiet."); }
+  else { Sound.start(); Sound.set({ night: Fx.isNight(), wx: wxNow() }); store.set("otd-sound", "1"); toast("Sound on: a soft city hum, a train now and then, rain when it rains."); }
+  render();
+});
 $("awake").addEventListener("click", () => { keepOn = !keepOn; store.set("otd-awake", keepOn ? "1" : "0"); updateWake(); render();
   toast(keepOn ? "The screen will stay on while this is open." : "The screen will lock as usual (unless a train is pinned)."); });
 $("skyline").addEventListener("click", () => toast(moonFacts()));
@@ -251,6 +258,7 @@ document.addEventListener("click", e => {   // tap the moon itself, wherever it'
   if (Fx.moonHit(e.clientX, e.clientY)) toast(moonFacts());
 });
 $("sig").addEventListener("click", () => { $("pretend").hidden = !$("pretend").hidden; });
+document.addEventListener("visibilitychange", () => { Sound.pause(document.hidden); });
 document.addEventListener("visibilitychange", () => { if (!document.hidden) { refresh(); refreshWeather(); refreshAlerts(); updateWake(); } });
 
 // ---------- start ----------
