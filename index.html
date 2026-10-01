@@ -81,7 +81,7 @@
   .L-row:last-child { border-bottom: 0; }
   @media (max-width: 600px) {
     .L-row { grid-template-columns: 36px minmax(0, 1fr); grid-template-areas: "b i" "t t"; row-gap: 8px; }
-    .L-row .bullet { grid-area: b; } .L-row .L-info { grid-area: i; text-align: left; } .L-row .L-track { grid-area: t; }
+    .L-row .bullet { grid-area: b; } .L-row .L-info { grid-area: i; text-align: left; } .L-row .L-line1 { justify-content: flex-start; } .L-row .L-track { grid-area: t; }
   }
   .bullet { width: 34px; height: 34px; border-radius: 50%; color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 18px; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
   .L-track { position: relative; height: 34px; min-width: 60px; }
@@ -94,6 +94,10 @@
   @keyframes pulse { 50% { box-shadow: 0 0 0 7px rgba(122,46,42,0.25); } }
   .L-info { text-align: right; min-width: 118px; }
   .L-leave { font-weight: 800; font-size: 20px; font-variant-numeric: tabular-nums; }
+  .L-line1 { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 4px 8px; }
+  .L-walk { display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px 2px 6px; border-radius: 999px; background: #E9E3D6; color: #3E413B; font-family: "Archivo Narrow", sans-serif; font-weight: 600; font-size: 13px; white-space: nowrap; }
+  .L-walk svg { width: 13px; height: 13px; }
+  .L-then { font-weight: 600; color: #3E413B; }
   .L-stn { margin-top: 4px; }
   .tablet { display: inline-flex; align-items: center; gap: 7px; font-family: "Cinzel", Georgia, serif; font-weight: 700; font-size: 11.5px; letter-spacing: 2px; color: var(--tc, #2F6B5E); }
   .tablet::before { content: ""; width: 9px; height: 9px; flex: none; background: linear-gradient(135deg, var(--tc, #2F6B5E) 0 50%, var(--tb, #C08A2E) 50% 100%); }
@@ -339,7 +343,7 @@ function renderLine(m) {
       map.innerHTML = `<div class="sign"><span class="arrow">←</span>Trains to Manhattan</div>` + m.rows.map(r => `<div class="L-row" id="L-r${r.i}">
         <div class="bullet" style="background:${r.color}">${r.o.route}</div>
         <div class="L-track"><div class="rail" style="background:${mosaicRail(r.color, r.i + 1)}"></div><div class="stn"></div><div class="car"></div></div>
-        <div class="L-info"><div class="L-leave"></div><div class="L-stn"></div><div class="L-next"></div></div>
+        <div class="L-info"><div class="L-line1"><span class="L-leave"></span><span class="L-walk"><svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="2.6" r="1.4" fill="currentColor" stroke="none"/><path d="M8.5 5.5 7 10l-2.5 4.5M7 10l3 1.5 1 3M8.5 5.5l2.5 2 2 .5M8.5 5.5 6 7l-1 2.5"/></svg>${r.o.walk} min walk</span></div><div class="L-stn"></div><div class="L-next"></div></div>
       </div>`).join("");
       map.dataset.keys = keys.join();
     }
@@ -353,7 +357,7 @@ function renderLine(m) {
       const hasNotice = m.alertRoutes.has(r.o.route);
       el.querySelector(".L-stn").innerHTML = tablet(r.o.station) + (hasNotice ? '<span class="L-chip">notice</span>' : "");
       const later = r.catchable.slice(1, 3).map(y => y.leave < 60 ? "now" : mins(y.leave)).join(", ");
-      el.querySelector(".L-next").textContent = `to ${x.terminal}${later ? ` · then ${later} min` : ""}`;
+      el.querySelector(".L-next").innerHTML = `${later ? `<span class="L-then">then ${later} min</span> · ` : ""}to ${esc(x.terminal)}`;
     });
   }
   const tm = view === "tmpl";
@@ -406,7 +410,7 @@ function renderHood(m) {
   document.getElementById("H-routes").innerHTML = m.rows.slice(1).map(r => {
     const x = r.catchable[0], later = r.catchable.slice(1, 3).map(y => y.leave < 60 ? "now" : mins(y.leave)).join(", ");
     return `<div class="H-route"><div class="H-dot" style="background:${r.color}">${r.o.route}</div>
-      <div>${r.o.station}<small>to ${x.terminal}${later ? ` · then ${later}` : ""}</small></div>
+      <div>${r.o.station}<small>${r.o.walk} min walk${later ? ` · then ${later}` : ""} · to ${x.terminal}</small></div>
       <div class="when">${x.leave < 60 ? "now" : `in ${mins(x.leave)}`}</div></div>`;
   }).join("") || `<div class="H-item"><span>Nothing else coming.</span></div>`;
   document.getElementById("H-routes-label").textContent = view === "tmpl" ? "TIME TO TMPL" : "OTHER ROUTES";
