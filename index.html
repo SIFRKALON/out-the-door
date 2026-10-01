@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Out the Door">
-<title>Out the Door</title>
+<meta name="apple-mobile-web-app-title" content="Trains">
+<title>Trains</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&family=Archivo+Narrow:wght@500;600&family=Cinzel:wght@500;700&family=Pixelify+Sans:wght@400;600&family=VT323&display=swap">
@@ -30,14 +30,16 @@
   @keyframes glint { 0%, 55% { background-position: 100% 0; } 78% { background-position: 0% 0; } 100% { background-position: 0% 0; } }
   @media (prefers-reduced-motion: reduce) { .jw { animation: none; background-position: 40% 0; } .L-track .rail, .L-track .car { animation: none; } }
   .L-top { display: flex; align-items: center; gap: 12px; }
-  .L-brand { font-family: "Cinzel", Georgia, serif; font-weight: 700; letter-spacing: 4px; font-size: 15px; flex: 1; white-space: nowrap; }
-  @media (max-width: 480px) { .L-brand { letter-spacing: 2px; font-size: 13px; } .L-wx { display: none; } .L-top { gap: 8px; } .toggle { font-size: 12px; padding: 5px 10px; } }
-  .sclock { width: 34px; height: 34px; flex: none; }
+  .L-spacer { flex: 1; }
+  @media (max-width: 480px) { .L-top { gap: 8px; } .L-wx { font-size: 13px; } }
+  .L-sig { display: flex; align-items: center; gap: 14px; width: 100%; justify-content: space-between; margin-top: 10px; }
+  .L-foot .toggle { min-height: 34px; font-size: 13px; padding: 4px 12px; border-width: 1.5px; }
+  .sig { font-family: "Cinzel", Georgia, serif; font-size: 11px; letter-spacing: 4px; opacity: 0.55; }
   .L-clock { font-weight: 600; font-variant-numeric: tabular-nums; color: #55584F; }
   .toggle { border: 2px solid currentColor; background: transparent; color: inherit; padding: 6px 12px; min-height: 40px; border-radius: 999px; font-size: 14px; font-weight: 600; }
   #L-fx { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 0; }
   .L { position: relative; z-index: 1; }
-  body.t-line.dark .L-brand, body.t-line.dark .L-clock, body.t-line.dark .L-foot, body.t-line.dark .L-top .toggle, body.t-line.dark .L-wx { color: #F1EEE6; }
+  body.t-line.dark .L-clock, body.t-line.dark .L-foot, body.t-line.dark .L-top .toggle, body.t-line.dark .L-wx { color: #F1EEE6; }
   .L-wx { font-family: "Archivo Narrow", sans-serif; font-size: 15px; color: #3E413B; }
   .L-main { display: grid; gap: 16px; }
   @media (min-width: 900px) { .L-main { grid-template-columns: minmax(0, 1fr) 340px; align-items: start; } }
@@ -46,7 +48,6 @@
   .views button { border: 0; background: transparent; color: inherit; padding: 6px 14px; min-height: 36px; font-size: 14px; font-weight: 600; }
   .views button[aria-pressed="true"] { background: #1B1C1A; color: #F8F5EE; }
   body.t-line.dark .views { color: #F1EEE6; } body.t-line.dark .views button[aria-pressed="true"] { background: #F1EEE6; color: #1B1C1A; }
-  .L-views { margin-top: 12px; }
   .T-row { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 14px; align-items: center; padding: 14px 0; border-bottom: 1px solid #E2DCCD; }
   .T-row:last-child { border-bottom: 0; }
   .T-min { font-weight: 800; font-size: 40px; line-height: 0.9; letter-spacing: -1.5px; color: #24427A; font-variant-numeric: tabular-nums; text-align: right; }
@@ -125,7 +126,9 @@
   .H { grid-template-columns: minmax(0, 1fr); max-width: 1180px; margin: 0 auto; padding: max(14px, env(safe-area-inset-top)) 14px max(20px, env(safe-area-inset-bottom)); display: grid; gap: 16px; }
   .H-top { display: flex; align-items: center; gap: 12px; font-size: 22px; }
   .H-top .day { flex: 1; color: #C9BCA0; }
-  .H-top .toggle { font-family: "Pixelify Sans", sans-serif; border-radius: 0; border-color: #FFC966; color: #FFC966; font-size: 14px; }
+  .H-sig { display: flex; align-items: center; justify-content: space-between; width: 100%; }
+  .H-sig .sig { font-family: "Pixelify Sans", sans-serif; letter-spacing: 3px; font-size: 12px; }
+  .H-foot .toggle, .H-top .toggle { font-family: "Pixelify Sans", sans-serif; border-radius: 0; border-color: #FFC966; color: #FFC966; font-size: 14px; }
   .H-main { display: grid; gap: 16px; }
   @media (min-width: 900px) { .H-main { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); align-items: start; } }
   .H-scene { display: block; width: 100%; height: auto; image-rendering: pixelated; image-rendering: crisp-edges; box-shadow: 0 0 0 4px #0A0914, 0 0 0 8px #5E3B26; background: #0B0F1F; }
@@ -170,14 +173,12 @@
 <div class="L" id="ui-line">
   <header>
     <div class="tess" data-tess aria-hidden="true"></div>
-    <div class="L-top" style="margin-top: 10px">
-      <span class="L-brand">OUT THE DOOR</span>
+    <div class="L-top" style="margin-top: 12px">
+      <div class="views" role="group" aria-label="View"><button type="button" data-view="trains">Trains</button><button type="button" data-view="tmpl">Time to TMPL</button></div>
+      <span class="L-spacer"></span>
       <span class="L-wx" id="L-wx"></span>
-      <svg class="sclock" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="18.5" fill="#FFFFFF" stroke="#141414" stroke-width="3"/><g id="sc-ticks" stroke="#141414" stroke-width="2"></g><line id="sc-h" x1="20" y1="20" x2="20" y2="11" stroke="#141414" stroke-width="3" stroke-linecap="round"/><line id="sc-m" x1="20" y1="20" x2="20" y2="6" stroke="#141414" stroke-width="2" stroke-linecap="round"/><line id="sc-s" x1="20" y1="23" x2="20" y2="5" stroke="#B5402B" stroke-width="1"/><circle cx="20" cy="20" r="1.8" fill="#141414"/></svg>
       <span class="L-clock" id="L-clock"></span>
-      <button class="toggle" type="button" data-toggle>Neighborhood</button>
     </div>
-    <div class="views L-views" role="group" aria-label="View"><button type="button" data-view="trains">Trains</button><button type="button" data-view="tmpl">Time to TMPL</button></div>
   </header>
   <div class="L-main">
     <div class="L-col">
@@ -195,7 +196,9 @@
       <details class="L-notices" id="L-notices" hidden><summary id="L-notices-sum">Service notices</summary><div id="L-alerts"></div></details>
     </div>
   </div>
-  <footer class="L-foot"><span id="L-sky"></span><span id="L-status"></span></footer>
+  <footer class="L-foot"><span id="L-sky"></span><span id="L-status"></span>
+    <span class="L-sig"><button class="toggle" type="button" data-toggle>Neighborhood</button><span class="sig">SIFRKALON</span></span>
+  </footer>
 </div>
 
 <!-- ============ NEIGHBORHOOD ============ -->
@@ -204,7 +207,6 @@
     <span class="day" id="H-day"></span>
     <span id="H-clock"></span>
     <span class="views" role="group" aria-label="View"><button type="button" data-view="trains">Trains</button><button type="button" data-view="tmpl">TMPL</button></span>
-    <button class="toggle" type="button" data-toggle>Night</button>
   </header>
   <div class="H-main">
     <div class="H-col">
@@ -223,6 +225,7 @@
         <span id="H-streak"></span>
         <span id="H-sky"></span>
         <span id="H-status"></span>
+        <span class="H-sig"><button class="toggle" type="button" data-toggle>Night</button><span class="sig">SIFRKALON</span></span>
       </footer>
     </div>
   </div>
@@ -309,13 +312,6 @@ function mosaicRail(color, seed) {
 const TABLETS = { "Central Av": ["#7A2E2A", "#C08A2E"], "Myrtle Av–Broadway": ["#24427A", "#C08A2E"], "Jefferson St": ["#2F6B5E", "#7A2E2A"], "Morgan Av": ["#8A5A1E", "#24427A"],
   "Astor Place": ["#24427A", "#7A2E2A"], "Hell's Kitchen": ["#2F6B5E", "#C08A2E"], "West Village": ["#7A2E2A", "#2F6B5E"], "Avenue A": ["#8A5A1E", "#2F6B5E"], "Lexington": ["#24427A", "#C08A2E"] };
 const tablet = name => { const [c, b] = TABLETS[name] || ["#2F6B5E", "#C08A2E"]; return `<span class="tablet" style="--tc:${c};--tb:${b}">${esc(name.toUpperCase())}</span>`; };
-document.getElementById("sc-ticks").innerHTML = Array.from({ length: 12 }, (_, i) => { const a = i * Math.PI / 6; return `<line x1="${20 + Math.sin(a) * 14.5}" y1="${20 - Math.cos(a) * 14.5}" x2="${20 + Math.sin(a) * 17}" y2="${20 - Math.cos(a) * 17}"/>`; }).join("");
-function stationClock() {
-  const d = new Date(), h = d.getHours() % 12 + d.getMinutes() / 60, mm = d.getMinutes() + d.getSeconds() / 60;
-  document.getElementById("sc-h").setAttribute("transform", `rotate(${h * 30} 20 20)`);
-  document.getElementById("sc-m").setAttribute("transform", `rotate(${mm * 6} 20 20)`);
-  document.getElementById("sc-s").setAttribute("transform", `rotate(${d.getSeconds() * 6} 20 20)`);
-}
 
 // The walk you see is 2 minutes shorter than the walk the math uses. The station feels closer; you still leave on time.
 const WALK_FIB_MIN = 2;
@@ -340,7 +336,6 @@ function model() {
 const TRACK_WINDOW = 15 * 60;   // a car starts its run 15 min before you need to leave
 function renderLine(m) {
   document.getElementById("L-clock").textContent = hm(m.now);
-  stationClock();
   const head = document.getElementById("L-head1"), b = m.best;
   if (!b) {
     head.textContent = updated ? "No trains right now" : "Listening for trains…"; head.className = "L-head1 quiet";
