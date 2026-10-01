@@ -160,7 +160,7 @@ function renderTrains(m) {
   if (list.dataset.keys !== keys) {
     list.innerHTML = head + m.rows.map(r => `<div class="row" data-i="${r.i}" role="button" tabindex="0">
       <div class="bullet" style="background:${r.color}">${r.o.route}</div>
-      <div class="track" style="--rt:${(7 + rnd(r.i * 17) * 5).toFixed(1)}s;--rd:${(rnd(r.i * 29) * -8).toFixed(1)}s"><div class="rail">${mosaicRail(r.color, r.i + 1)}</div><div class="stn"></div><div class="car"></div></div>
+      <div class="track" style="--rt:${(7 + rnd(r.i * 17) * 5).toFixed(1)}s;--rd:${(rnd(r.i * 29) * -8).toFixed(1)}s"><div class="rail">${mosaicRail(r.color, r.i + 1)}</div><div class="stn"></div><div class="car" style="--rc:${r.color}"><b>${r.o.route}</b></div></div>
       <div class="info"><div class="line1"><span class="leave"></span><span class="walk">${WALKER}${shownWalk(r.o.walk)} min walk</span></div><div class="stnname"></div><div class="next"></div></div>
     </div>`).join("");
     list.dataset.keys = keys;
@@ -171,7 +171,7 @@ function renderTrains(m) {
     const isPinned = !!pin && pin.i === r.i;
     const x = isPinned && m.pinned ? m.pinned.catchable[0] : r.catchable[0];
     const p = Math.min(1, Math.max(0, 1 - x.leave / TRACK_WINDOW));
-    el.querySelector(".car").style.left = `${p * Math.max(0, el.querySelector(".track").clientWidth - 46)}px`;
+    el.querySelector(".car").style.left = `${p * Math.max(0, el.querySelector(".track").clientWidth - 54)}px`;
     el.classList.toggle("go", x.leave < 60);
     el.classList.toggle("pinned", isPinned);
     el.setAttribute("aria-pressed", String(isPinned));

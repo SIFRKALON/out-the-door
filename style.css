@@ -96,8 +96,16 @@ button { font: inherit; cursor: pointer; }
 .track .rail { position: absolute; left: 0; right: 14px; top: 13px; height: 8px; display: flex; gap: 2px; overflow: hidden; }
 .track .rail i { flex: none; height: 8px; display: block; }
 .track .stn { position: absolute; right: 0; top: 6px; width: 22px; height: 22px; border-radius: 50%; background: #F8F5EE; border: 5px solid #1B1C1A; }
-.track .car { position: absolute; top: 8px; width: 28px; height: 18px; border-radius: 5px; background: #1B1C1A; transition: left 1s linear; }
-.track .car::after { content: ""; position: absolute; left: 4px; right: 4px; top: 5px; height: 4px; background: #F1D48A; border-radius: 1px; }
+/* the little car is a real NYC subway car in miniature: brushed stainless, a row of windows, a sloped cab
+   at the front, and the line's round route sign glowing on the nose */
+.track .car { position: absolute; top: 7px; width: 36px; height: 20px; border-radius: 4px 9px 6px 4px; transition: left 1s linear;
+  background: linear-gradient(180deg, #F2F3F5 0%, #C9CDD3 45%, #A9AEB6 100%);
+  box-shadow: inset 0 0 0 1px rgba(30,32,36,0.55), 0 1px 2px rgba(0,0,0,0.25); }
+.track .car::before { content: ""; position: absolute; left: 3px; right: 9px; top: 4px; height: 6px; border-radius: 1px;   /* windows */
+  background: repeating-linear-gradient(90deg, #2A2E36 0 1px, #F1D48A 1px 5px, #2A2E36 5px 6px); }
+.track .car::after { content: ""; position: absolute; left: 1px; right: 1px; bottom: 4px; height: 1.5px; background: var(--rc); opacity: 0.85; }   /* a thin route-color stripe */
+.track .car b { position: absolute; right: 2px; top: 3px; width: 8px; height: 8px; border-radius: 50%; background: var(--rc);
+  color: #fff; font: 800 6px/8px Archivo, sans-serif; text-align: center; box-shadow: 0 0 4px var(--rc); }
 /* a quick shiver through the rail and the car every several seconds */
 .track .rail, .track .car { animation: rumble var(--rt, 9s) linear infinite; animation-delay: var(--rd, 0s); }
 .row.go .track .rail, .row.go .track .car { --rt: 3.2s; }
@@ -176,8 +184,8 @@ body.dark .tablet { color: #E9D29A; }
 body.dark .pmin { color: #E9C86A; }
 body.dark .prow.top .pmin { color: #F0B08A; }
 body.dark .track .stn { background: #0F2627; border-color: #F4EBD0; }
-body.dark .track .car { background: #EDE4CC; }
-body.dark .track .car::after { background: #1B1C1A; }
+body.dark .track .car { background: linear-gradient(180deg, #D9DCE1 0%, #A4A9B1 55%, #7E848D 100%); box-shadow: inset 0 0 0 1px rgba(0,0,0,0.6), 0 0 6px rgba(241,212,138,0.25); }
+body.dark .track .car::before { background: repeating-linear-gradient(90deg, #1E2228 0 1px, #FFE2A0 1px 5px, #1E2228 5px 6px); box-shadow: 0 0 5px rgba(255,214,140,0.55); }
 body.dark .note, body.dark .notices { border-color: rgba(217, 178, 74, 0.6); color: #F4EBD0; }
 body.dark .note.blue { border-color: rgba(140, 170, 230, 0.7); }
 
