@@ -1,4 +1,4 @@
-# Trains
+# Time To Go!
 
 A personal departure board for Bushwick: when to leave for the next Manhattan-bound M, J, Z or L,
 plus live door-to-door times to TMPL clubs and grocery stores.
