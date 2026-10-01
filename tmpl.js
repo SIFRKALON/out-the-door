@@ -12,7 +12,7 @@ const CLUBS = [
   { name: "Hell's Kitchen",  doing: "in the saltwater pool", exits: [{ route: "M", stop: "D15", walk: 9 }] },
   { name: "West Village",    doing: "in the infrared sauna", exits: [{ route: "M", stop: "D20", walk: 4 }, { route: "L", stop: "L01", walk: 10 }] },
   { name: "Avenue A",        doing: "in the infrared sauna", exits: [{ route: "M", stop: "M18", walk: 7 }, { route: "J", stop: "M18", walk: 7 }, { route: "Z", stop: "M18", walk: 7 }, { route: "L", stop: "L06", walk: 13 }] },
-  { name: "53rd & Lex",      doing: "at the spa",            exits: [{ route: "M", stop: "F11", walk: 1 }, { route: "M", stop: "B08", walk: 12 }, { route: "M", stop: "D15", walk: 13 }] },
+  { name: "Lexington",       doing: "at the spa",            exits: [{ route: "M", stop: "F11", walk: 1 }, { route: "M", stop: "B08", walk: 12 }, { route: "M", stop: "D15", walk: 13 }] },
 ];
 
 // rows: the model's catchable options (each has o, catchable[{t, leave, after:[[stop, time]...]}])
