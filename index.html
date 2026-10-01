@@ -59,10 +59,10 @@
   .T-how { font-family: "Archivo Narrow", sans-serif; font-size: 14px; color: #55584F; margin-top: 3px; }
   .T-how b { color: #1B1C1A; }
 
-  .L-plaque { position: relative; background: #F4EFE3; padding: 40px 36px 32px; text-align: center; overflow: hidden; }
+  .L-plaque { position: relative; background: #F4EFE3; padding: 50px 46px 42px; text-align: center; overflow: hidden; }
   .L-plaque > canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; }
   .L-plaque > div { position: relative; z-index: 1; }
-  @media (max-width: 480px) { .L-plaque { padding: 34px 28px 28px; } .L-plaque .L-sub { font-size: 13px; } }
+  @media (max-width: 480px) { .L-plaque { padding: 42px 34px 34px; } .L-plaque .L-sub { font-size: 13px; } }
   .L-head1 { font-weight: 800; font-size: clamp(34px, 9vw, 64px); line-height: 1; letter-spacing: -1.5px; white-space: nowrap; color: #1B1C1A; font-variant-numeric: tabular-nums; }
   /* the number, gilded on black glass like an old transom or shop-door numeral */
   .L-head1 em { font-style: normal; display: inline-block; padding: 0.02em 0.22em 0.06em; margin: 0 0.04em; border-radius: 0.12em; vertical-align: 0.02em;
@@ -189,6 +189,7 @@
 <canvas id="L-fx" aria-hidden="true"></canvas>
 <div class="L" id="ui-line">
   <header>
+    <div class="band" id="band" aria-hidden="true"></div>
     <div class="L-top" style="margin-top: 12px">
       <div class="views" role="group" aria-label="View"><button type="button" data-view="trains">Trains</button><button type="button" data-view="tmpl">TMPL</button><button type="button" data-view="grocery">Groceries</button></div>
       <span class="L-spacer"></span>
@@ -313,7 +314,6 @@ const tone = (c, i, k = 0.1) => shade(c, (rnd(i) - 0.5) * k);
 
 // top band: three courses. brick, then an ochre/sage checker set with the odd jewel, then navy
 (function buildBand() {
-  if (!document.getElementById("band")) return;
   let html = "";
   for (let col = 0; col < 260; col++) for (let row = 0; row < 3; row++) {
     const i = col * 3 + row;
@@ -339,18 +339,24 @@ function paintPlaque() {
   const T = W < 480 ? 7.5 : 9, G = 1.5, S = T + G;
   const cols = Math.floor((W - G) / S), rows = Math.floor((H - G) / S);
   const ox = (W - cols * S - G) / 2 + G, oy = (H - rows * S - G) / 2 + G;
-  c.fillStyle = TILE.grout; c.fillRect(0, 0, W, H);  // grout shows only between the border tiles
+  c.fillStyle = TILE.grout; c.fillRect(0, 0, W, H);
   for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
     const ring = Math.min(x, y, cols - 1 - x, rows - 1 - y), i = y * 997 + x;
-    if (ring > 1) continue;
-    const corner = (x < 2 || x > cols - 3) && (y < 2 || y > rows - 3);
-    const col = corner ? TILE.ochre : ring === 0 ? TILE.brick : TILE.navy;
-    c.fillStyle = tone(col, i, 0.12);
+    const corner = (x < 3 || x > cols - 4) && (y < 3 || y > rows - 4);
+    let col;
+    if (corner) {
+      const cx = x < 3 ? 1 : cols - 2, cy = y < 3 ? 1 : rows - 2;
+      col = x === cx && y === cy ? "#D9B24A" : (Math.abs(x - cx) + Math.abs(y - cy) === 1 ? TILE.brick : TILE.navy);
+    } else if (ring === 0) col = TILE.brick;
+    else if (ring === 1) col = (x + y) % 2 ? TILE.ochre : TILE.sage;
+    else if (ring === 2) col = TILE.navy;
+    else col = TILE.field;
+    c.fillStyle = tone(col, i, ring >= 3 && !corner ? 0.05 : 0.12);
     c.fillRect(ox + x * S, oy + y * S, T, T);
   }
-  // plain cream field inside the border
-  c.fillStyle = "#F6F2E8";
-  c.fillRect(ox + 2 * S, oy + 2 * S, (cols - 4) * S - G, (rows - 4) * S - G);
+  // soften the grout inside the field so the words sit on calm tile
+  c.fillStyle = "rgba(243,238,226,0.55)";
+  c.fillRect(ox + 3 * S, oy + 3 * S, (cols - 6) * S - G, (rows - 6) * S - G);
 }
 addEventListener("resize", paintPlaque);
 if (window.ResizeObserver) new ResizeObserver(paintPlaque).observe(document.querySelector(".L-plaque"));
@@ -359,7 +365,10 @@ function mosaicRail(color, seed) {
   let out = "", x = 0;
   for (let i = 0; x < 1000; i++) {
     const w = 6 + Math.floor(rnd(seed * 97 + i) * 7), j = rnd(seed * 53 + i);
-    out += `<i style="width:${w}px;background:${shade(color, (rnd(seed * 31 + i) - 0.5) * 0.22)}"></i>`;
+    out += j < 0.04 ? jewel(w, GOLD, seed * 131 + i)
+         : j < 0.06 ? jewel(w, TEAL, seed * 137 + i)
+         : j < 0.17 ? jewel(w, jewelOf(color), seed * 139 + i)
+         : `<i style="width:${w}px;background:${shade(color, (rnd(seed * 31 + i) - 0.5) * 0.28)}"></i>`;
     x += w + 2;
   }
   return out;
