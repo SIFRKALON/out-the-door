@@ -7,7 +7,7 @@ const PRETEND_OPTIONS = [
   ["temp", "Temperature", [["cold", "Cold"], ["freezing", "Freezing"], ["hot", "Hot"]]],
   ["time", "Time of day", [["day", "Day"], ["golden", "Golden hour"], ["dusk", "Dusk"], ["night", "Night"]]],
   ["moon", "Moon", [["full", "Full moon"], ["new", "New moon"]]],
-  ["extra", "Other", [["go", "Time to go"], ["latenight", "Late night (no M)"], ["alert", "Service alert"], ["air", "Bad air"], ["wind", "Windy"], ["uv", "Strong sun"], ["puddles", "Wet streets"]]],
+  ["extra", "Other", [["go", "Time To Go!"], ["latenight", "Late night (no M)"], ["alert", "Service alert"], ["air", "Bad air"], ["wind", "Windy"], ["uv", "Strong sun"], ["puddles", "Wet streets"]]],
 ];
 const VISITORS = [["star", "Shooting star"], ["plane", "Plane"], ["pigeon", "Pigeon"], ["steam", "Steam"], ["leaves", "Leaves"], ["rat", "Pizza rat"], ["jogger", "Jogger"],
   ["marathon", "Marathon"], ["balloon", "Parade balloon"], ["cat", "Bodega cat"], ["bats", "Bats"], ["fireworks", "Fireworks"]];

@@ -135,7 +135,7 @@ function renderSign(m) {
   }
   const x = b.catchable[0], go = x.leave < 60;
   head.className = "head" + (go ? " now" : "");
-  setHTML(head, go ? "Time to go" : `Leave in <em title="Tap me"><span class="gilt">${mins(x.leave)}</span></em> min`);
+  setHTML(head, go ? "Time To Go!" : `Leave in <em title="Tap me"><span class="gilt">${mins(x.leave)}</span></em> min`);
   $("what").innerHTML = `for the <b>${b.o.route}</b> at ${esc(b.o.station)}${m.pinned ? '<span class="chip pin">pinned</span>' : ""}`;
   $("sub").textContent = `toward ${x.terminal} · arrives ${hm(x.t)} · ${shownWalk(b.o.walk)} min walk`;
 
@@ -233,7 +233,7 @@ function togglePin(i) {
   const r = model().rows.find(r => r.i === i);
   if (!r) return;
   if (pin && pin.i === i) { pin = null; pinStage = null; }
-  else { pin = { i, t: r.catchable[0].t }; pinStage = null; unlockAudio(); toast(`Pinned the ${r.o.route} at ${r.o.station}. I'll chime at 2 minutes and when it's time to go.`); }
+  else { pin = { i, t: r.catchable[0].t }; pinStage = null; unlockAudio(); toast(`Pinned the ${r.o.route} at ${r.o.station}. I'll chime at 2 minutes and when it's Time To Go!`); }
   updateWake(); render();
 }
 $("list").addEventListener("click", e => { const row = e.target.closest(".row"); if (row) togglePin(+row.dataset.i); });
