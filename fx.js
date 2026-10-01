@@ -94,9 +94,10 @@ const Fx = (() => {
       stars.forEach(s => { ctx.fillStyle = `rgba(233,200,106,${0.2 + 0.55 * (Math.sin(t * 1.4 + s.p) + 1) / 2 * s.s})`; ctx.fillRect(s.x * w, s.y * h, s.s > 0.8 ? 2 : 1.3, s.s > 0.8 ? 2 : 1.3); });
       if (window.SunCalc) {
         const mp = SunCalc.getMoonPosition(now, st.lat, st.lon);
-        if (mp.altitude > 0 && w >= 600) {   // on phones the moon would sit under the header
+        if (mp.altitude > 0) {
           const { fraction, phase: mph } = SunCalc.getMoonIllumination(now);
-          const mx = w * 0.8, my = h * 0.12, r = 18;
+          // on phones the moon sits lower, where it glows through the glass panels
+          const narrow = w < 600, mx = narrow ? w * 0.74 : w * 0.8, my = narrow ? h * 0.56 : h * 0.12, r = narrow ? 18 : 18;
           const g = ctx.createRadialGradient(mx, my, 0, mx, my, 140);
           g.addColorStop(0, "rgba(244,235,208,0.22)"); g.addColorStop(1, "rgba(244,235,208,0)");
           ctx.fillStyle = g; ctx.fillRect(mx - 140, my - 140, 280, 280);

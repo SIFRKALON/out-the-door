@@ -59,7 +59,7 @@
   .T-how { font-family: "Archivo Narrow", sans-serif; font-size: 14px; color: #55584F; margin-top: 3px; }
   .T-how b { color: #1B1C1A; }
 
-  .L-plaque { position: relative; background: #F4EFE3; padding: 40px 40px 32px; text-align: center; overflow: hidden; }
+  .L-plaque { position: relative; background: transparent; -webkit-backdrop-filter: blur(10px) saturate(1.2); backdrop-filter: blur(10px) saturate(1.2); padding: 40px 40px 32px; text-align: center; overflow: hidden; }
   .L-plaque > canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; }
   .L-plaque > div { position: relative; z-index: 1; }
   @media (max-width: 480px) { .L-plaque { padding: 34px 32px 28px; } .L-plaque .L-sub { font-size: 13px; } }
@@ -77,16 +77,16 @@
   .L-what b { font-weight: 800; }
   .L-sub { color: #55584F; font-family: "Archivo Narrow", sans-serif; font-size: 15px; margin-top: 4px; }
   .L-side { display: grid; gap: 12px; }
-  .L-note { background: #F8F5EE; border: 2px solid #C08A2E; border-left-width: 8px; padding: 10px 14px; }
+  .L-note { background: rgba(248,245,238,0.72); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border: 2px solid #C08A2E; border-left-width: 8px; padding: 10px 14px; }
   .L-note b { display: block; font-size: 16px; }
   .L-note span { font-family: "Archivo Narrow", sans-serif; font-size: 14px; color: #55584F; }
-  .L-notices { background: rgba(248,245,238,0.92); border: 1px solid #B9B09C; }
+  .L-notices { -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); background: rgba(248,245,238,0.72); border: 1px solid #B9B09C; }
   .L-notices summary { padding: 10px 14px; font-family: "Cinzel", Georgia, serif; letter-spacing: 2px; font-size: 13px; cursor: pointer; list-style-position: inside; }
   .L-notices > div { display: grid; gap: 10px; padding: 0 12px 12px; }
   .L-chip { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; background: #24427A; color: #F8F5EE; font-family: "Archivo Narrow", sans-serif; font-size: 11px; letter-spacing: 0.5px; vertical-align: 2px; }
   .L-alert { background: #24427A; color: #F8F5EE; border: 3px solid #F8F5EE; outline: 2px solid #24427A; padding: 10px 14px; font-size: 15px; line-height: 1.35; }
   .L-alert small { display: block; font-family: "Cinzel", serif; letter-spacing: 3px; font-size: 11px; opacity: 0.85; margin-bottom: 3px; }
-  .L-map { background: #F8F5EE; border: 2px solid #1B1C1A; padding: 0 18px 8px; }
+  .L-map { background: rgba(248,245,238,0.74); -webkit-backdrop-filter: blur(12px) saturate(1.15); backdrop-filter: blur(12px) saturate(1.15); border: 2px solid #1B1C1A; padding: 0 18px 8px; }
   .sign { margin: 0 -18px 4px; background: #141414; color: #FFFFFF; padding: 9px 18px 8px; border-top: 4px solid #141414; box-shadow: inset 0 2px 0 #FFFFFF; font-weight: 700; font-size: 15px; letter-spacing: 0.2px; display: flex; align-items: center; gap: 10px; }
   .sign .dot { width: 22px; height: 22px; border-radius: 50%; color: #fff; display: inline-grid; place-items: center; font-size: 13px; font-weight: 800; }
   .sign .arrow { font-size: 18px; line-height: 1; }
@@ -183,7 +183,7 @@
   body.t-line.dark .L-head1, body.t-line.dark .L-what, body.t-line.dark .L-what b { color: #F4EBD0; }
   body.t-line.dark .L-head1.now { color: #F0B08A; }
   body.t-line.dark .L-sub { color: #AFC0BA; }
-  body.t-line.dark .L-map { background: rgba(10, 30, 31, 0.86); border-color: rgba(217, 178, 74, 0.55); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+  body.t-line.dark .L-map { background: rgba(10, 30, 31, 0.4); border-color: rgba(217, 178, 74, 0.55); -webkit-backdrop-filter: blur(9px) saturate(1.3); backdrop-filter: blur(9px) saturate(1.3); }
   body.t-line.dark .sign { box-shadow: inset 0 2px 0 #D9B24A; }
   body.t-line.dark .L-row, body.t-line.dark .T-row { border-bottom-color: rgba(233, 200, 106, 0.16); }
   body.t-line.dark .L-leave, body.t-line.dark .T-doing { color: #F4EBD0; }
@@ -196,7 +196,7 @@
   body.t-line.dark .L-track .stn { background: #0F2627; border-color: #F4EBD0; }
   body.t-line.dark .L-track .car { background: #EDE4CC; }
   body.t-line.dark .L-track .car::after { background: #1B1C1A; }
-  body.t-line.dark .L-note, body.t-line.dark .L-notices { background: rgba(10, 30, 31, 0.86); border-color: rgba(217, 178, 74, 0.6); color: #F4EBD0; }
+  body.t-line.dark .L-note, body.t-line.dark .L-notices { background: rgba(10, 30, 31, 0.5); border-color: rgba(217, 178, 74, 0.6); color: #F4EBD0; }
   body.t-line.dark .L-note span { color: #AFC0BA; }
   :focus-visible { outline: 3px solid #FFC966; outline-offset: 2px; }
   @media (prefers-reduced-motion: reduce) { .L-track .car { transition: none; } .L-row.go .stn { animation: none; } }
@@ -273,7 +273,7 @@
 <script src="suncalc.js?v=10"></script>
 <script src="data.js?v=10"></script>
 <script src="scene.js?v=10"></script>
-<script src="fx.js?v=16"></script>
+<script src="fx.js?v=18"></script>
 <script src="tmpl.js?v=14"></script>
 <script>
 // ---------- themes: line → neighborhood → neighborhood at night ----------
@@ -370,13 +370,20 @@ function paintPlaque() {
     } else if (ring === 0) col = TILE.brick;
     else if (ring === 1) col = (x + y) % 2 ? TILE.ochre : TILE.sage;
     else if (ring === 2) col = TILE.navy;
-    else col = dark ? "#173230" : TILE.field;
-    c.fillStyle = tone(col, i, ring >= 3 && !corner ? 0.05 : 0.12);
+    else continue;
+    c.fillStyle = tone(col, i, 0.12);
     c.fillRect(ox + x * S, oy + y * S, T, T);
   }
-  // soften the grout inside the field so the words sit on calm tile
-  c.fillStyle = dark ? "rgba(23,50,48,0.6)" : "rgba(243,238,226,0.55)";
-  c.fillRect(ox + 3 * S, oy + 3 * S, (cols - 6) * S - G, (rows - 6) * S - G);
+  // the field: frosted glass, so the sky shows through, with a whisper of tile grid
+  const fx0 = ox + 3 * S - G, fy0 = oy + 3 * S - G, fw = (cols - 6) * S + G, fh = (rows - 6) * S + G;
+  c.clearRect(fx0, fy0, fw, fh);
+  c.fillStyle = dark ? "rgba(16,40,40,0.52)" : "rgba(246,242,232,0.72)";
+  c.fillRect(fx0, fy0, fw, fh);
+  c.strokeStyle = dark ? "rgba(244,235,208,0.07)" : "rgba(160,145,120,0.13)"; c.lineWidth = 1;
+  c.beginPath();
+  for (let x = 3; x <= cols - 3; x++) { const X = ox + x * S - G / 2; c.moveTo(X, fy0); c.lineTo(X, fy0 + fh); }
+  for (let y = 3; y <= rows - 3; y++) { const Y = oy + y * S - G / 2; c.moveTo(fx0, Y); c.lineTo(fx0 + fw, Y); }
+  c.stroke();
 }
 addEventListener("resize", paintPlaque);
 if (window.ResizeObserver) new ResizeObserver(paintPlaque).observe(document.querySelector(".L-plaque"));
