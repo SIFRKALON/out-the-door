@@ -205,7 +205,7 @@ function render() {
   const dark = Fx.isNight();
   document.body.classList.toggle("dark", dark);
   if (dark !== wasDark) { wasDark = dark; paintPlaque($("plaque-bg"), dark); }
-  Fx.set({ wx, lat: HOME.lat, lon: HOME.lon });
+  Fx.set({ wx, lat: HOME.lat, lon: HOME.lon, season: PRETEND.season || "" });
 
   $("notes").innerHTML = m.notes.map(([t, d, k]) => `<div class="note glass${k ? " " + k : ""}"><b>${t}</b><span>${d}</span></div>`).join("");
   $("notices").hidden = !m.alerts.length;

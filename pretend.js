@@ -6,11 +6,12 @@ const PRETEND_OPTIONS = [
   ["sky",  "Weather", [["sunny", "Sunny"], ["partly", "Partly cloudy"], ["cloudy", "Cloudy"], ["rain", "Rain"], ["heavy", "Downpour"], ["storm", "Storm"], ["snow", "Snow"], ["fog", "Fog"]]],
   ["temp", "Temperature", [["cold", "Cold"], ["freezing", "Freezing"], ["hot", "Hot"]]],
   ["time", "Time of day", [["day", "Day"], ["golden", "Golden hour"], ["dusk", "Dusk"], ["night", "Night"]]],
+  ["season", "Season", [["pride", "Pride (June)"], ["october", "October"], ["thanksgiving", "Thanksgiving"]]],
   ["moon", "Moon", [["full", "Full moon"], ["new", "New moon"]]],
   ["extra", "Other", [["go", "Time To Go!"], ["latenight", "Late night (no M)"], ["alert", "Service alert"], ["air", "Bad air"], ["wind", "Windy"], ["uv", "Strong sun"], ["puddles", "Wet streets"]]],
 ];
 const VISITORS = [["star", "Shooting star"], ["plane", "Plane"], ["pigeon", "Pigeon"], ["steam", "Steam"], ["leaves", "Leaves"], ["rat", "Pizza rat"], ["jogger", "Jogger"],
-  ["marathon", "Marathon"], ["balloon", "Parade balloon"], ["cat", "Bodega cat"], ["bats", "Bats"], ["fireworks", "Fireworks"]];
+  ["marathon", "Marathon"], ["balloon", "Parade balloon"], ["cat", "Bodega cat"], ["pride", "Pride march"], ["ghost", "Ghost"], ["hparade", "Halloween parade"], ["turkey", "Turkey"], ["bats", "Bats"], ["fireworks", "Fireworks"]];
 const pretending = () => Object.keys(PRETEND).length > 0;
 
 // Bend SunCalc so the sky, the moon and the sunset line all follow the pretend time and moon.

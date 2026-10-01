@@ -53,7 +53,14 @@ const Fx = (() => {
   const rand = (a, b) => a + Math.random() * (b - a);
   function special(d) {   // the days that get their own visitors
     const m = d.getMonth(), day = d.getDay(), date = d.getDate();
-    return { marathon: m === 10 && day === 0 && date <= 7, thanksgiving: m === 10 && day === 4 && date >= 22 && date <= 28 };
+    const nov1 = new Date(d.getFullYear(), 10, 1).getDay(), tgDate = 1 + (4 - nov1 + 7) % 7 + 21;   // 4th Thursday of November
+    return {
+      marathon: m === 10 && day === 0 && date <= 7,
+      thanksgiving: m === 10 && date === tgDate,
+      prideMarch: m === 5 && day === 0 && date >= 24,          // NYC Pride March: last Sunday in June
+      halloween: m === 9 && date === 31,                         // the Village Halloween Parade
+      season: st.season || (m === 5 ? "pride" : m === 9 ? "october" : m === 10 && date >= 15 && date <= tgDate ? "thanksgiving" : ""),
+    };
   }
   function md(now) { return (now.getMonth() + 1) * 100 + now.getDate(); }   // e.g. Oct 31 -> 1031
   const EGGS = {
@@ -62,7 +69,11 @@ const Fx = (() => {
     pigeon:   { every: [60, 150], ok: c => !c.night && c.kind !== "storm" && c.kind !== "snow" },
     steam:    { every: c => c.cold ? [25, 55] : [120, 240], ok: () => true },
     leaves:   { every: [40, 90], ok: c => c.md >= 922 && c.md <= 1130 && c.kind !== "snow" },
-    bats:     { every: [35, 70], ok: c => c.night && c.md >= 1024 && c.md <= 1101 },
+    bats:     { every: c => c.md >= 1024 ? [35, 70] : [120, 260], ok: c => c.night && (c.season === "october" || c.md === 1101) },
+    ghost:    { every: c => c.halloween ? [30, 70] : [200, 420], ok: c => c.night && c.season === "october" },
+    hparade:  { every: [12, 30], ok: c => c.halloween && c.night },                            // Village Halloween Parade
+    pride:    { every: c => c.prideMarch ? [10, 25] : [150, 320], ok: c => c.season === "pride" && !c.night },
+    turkey:   { every: c => c.thanksgiving ? [40, 90] : [200, 420], ok: c => c.season === "thanksgiving" && !c.night },
     fireworks:{ every: [6, 14], ok: c => c.night && (c.md === 704 || c.md === 1231 || c.md === 101) },
     rat:      { every: [600, 1500], ok: () => true },                                      // pizza rat, rarely
     jogger:   { every: [150, 360], ok: c => !c.night && c.kind !== "storm" && c.kind !== "snow" },
@@ -71,8 +82,13 @@ const Fx = (() => {
     cat:      { every: [420, 1000], ok: () => true },                                         // a bodega cat peeks in
   };
 
+  function sideStart(dir) {   // somewhere on the left or right edge, with room to walk without reaching a corner
+    const W2 = w - 2 * M - 2 * RAD, H2 = h - 2 * M - 2 * RAD, Q = Math.PI * RAD / 2, right = Math.random() < 0.5;
+    const s0 = right ? W2 + Q : 2 * W2 + 3 * Q + H2;
+    return s0 + (dir > 0 ? rand(0.02, 0.15) : rand(0.85, 0.98)) * H2;
+  }
   function spawn(kind, c) {
-    const now = performance.now() / 1000, P = perimLen();
+    const now = performance.now() / 1000, P = perimLen(), H2 = h - 2 * M - 2 * RAD;
     if (kind === "rat") sprites.push({ kind, t0: now, dur: 26, start: rand(0, P), dir: Math.random() < 0.5 ? 1 : -1, dist: P * 0.35 });
     if (kind === "jogger") sprites.push({ kind, t0: now, dur: 30, start: rand(0, P), dir: Math.random() < 0.5 ? 1 : -1, dist: P * 0.3, shirt: ["#C0492F", "#24427A", "#2F8F6B", "#D9B24A"][Math.floor(rand(0, 4))] });
     if (kind === "marathon") for (let i = 0; i < 6; i++) sprites.push({ kind: "jogger", t0: now + i * rand(0.6, 1.6), dur: 34, start: P * 0.02, dir: 1, dist: P * 0.55, shirt: ["#C0492F", "#24427A", "#2F8F6B", "#D9B24A", "#7A3E9A", "#E8732F"][i], bib: true });
@@ -84,6 +100,12 @@ const Fx = (() => {
     if (kind === "steam") sprites.push({ kind, t0: now, dur: 9, x: rand(0.1, 0.9) * w, stack: Math.random() < 0.3 });
     if (kind === "leaves") for (let i = 0; i < 7; i++) sprites.push({ kind: "leaf", t0: now + i * rand(0.4, 1.4), dur: rand(9, 14), x: rand(0, 1) * w, s: rand(0.8, 1.3), hue: i % 3, spin: rand(-2, 2) });
     if (kind === "bats") for (let i = 0; i < 3; i++) sprites.push({ kind: "bat", t0: now + i * 0.6, dur: 9, dir: 1, y: rand(0.1, 0.35) * h + i * 18 });
+    if (kind === "pride") { const n = c.prideMarch ? 8 : 4, dir = Math.random() < 0.5 ? 1 : -1, st0 = sideStart(dir);
+      for (let i = 0; i < n; i++) sprites.push({ kind: "marcher", t0: now + i * rand(0.9, 1.6), dur: 46, start: st0, dir, dist: H2 * 0.8, flag: ["rainbow", "trans", "rainbow", "bi", "rainbow", "lesbian", "trans", "rainbow"][i], shirt: RAINBOW[i % 6] }); }
+    if (kind === "hparade") { const dir = Math.random() < 0.5 ? 1 : -1, st0 = sideStart(dir);
+      for (let i = 0; i < 6; i++) sprites.push({ kind: "marcher", t0: now + i * rand(0.9, 1.6), dur: 46, start: st0, dir, dist: H2 * 0.8, costume: ["ghost", "pumpkin", "witch", "ghost", "witch", "pumpkin"][i], shirt: "#2B2A2E" }); }
+    if (kind === "ghost") sprites.push({ kind, t0: now, dur: 16, x: rand(0.1, 0.9) * w, y: rand(0.5, 0.85) * h });
+    if (kind === "turkey") { const dir = Math.random() < 0.5 ? 1 : -1; sprites.push({ kind, t0: now, dur: 40, start: sideStart(dir), dir, dist: H2 * 0.75 }); }
     if (kind === "fireworks") sprites.push({ kind: "burst", t0: now, dur: 2.4, x: rand(0.15, 0.85) * w, y: rand(0.08, 0.35) * h, col: ["#F2C14E", "#E8735A", "#7FD6CF", "#F4EBD0"][Math.floor(rand(0, 4))] });
   }
 
@@ -92,6 +114,38 @@ const Fx = (() => {
       const e = EGGS[k], iv = typeof e.every === "function" ? e.every(c) : e.every;
       if (next[k] == null) next[k] = now + rand(8, 30);   // the first ones come soon after opening
       if (now >= next[k]) { if (e.ok(c)) spawn(k, c); next[k] = now + rand(iv[0], iv[1]); }
+    }
+  }
+
+  const RAINBOW = ["#E4403A", "#F28C28", "#F5D23D", "#3FA34D", "#2F6FD0", "#7B4BB0"];
+  const FLAGS = { rainbow: RAINBOW, trans: ["#5BCEFA", "#F5A9B8", "#FFFFFF", "#F5A9B8", "#5BCEFA"], bi: ["#D60270", "#D60270", "#9B4F96", "#0038A8", "#0038A8"],
+    lesbian: ["#D52D00", "#FF9A56", "#FFFFFF", "#D362A4", "#A30262"] };
+  function flag(x, y, colors, wv, fw = 9, fh = 6) {   // a little waving flag on a pole, pole at x, top at y
+    ctx.fillStyle = "#6B5A44"; ctx.fillRect(x - 0.5, y, 1, fh + 9);
+    const bh = fh / colors.length;
+    colors.forEach((c, k) => { ctx.fillStyle = c;
+      for (let j = 0; j < fw; j++) ctx.fillRect(x + 0.5 + j, y + k * bh + Math.sin(wv + j * 0.7) * 0.8 * (j / fw), 1.05, bh + 0.2); });
+  }
+  function pumpkin(x, y, sc, night, t, seed) {   // a jack-o'-lantern on the stoop
+    if (night) { const f = 0.75 + 0.25 * Math.sin(t * 9 + seed) * Math.sin(t * 3.3 + seed * 2);
+      const g = ctx.createRadialGradient(x, y, 0, x, y, 30 * sc); g.addColorStop(0, `rgba(255,170,60,${0.35 * f})`); g.addColorStop(1, "rgba(255,170,60,0)");
+      ctx.fillStyle = g; ctx.fillRect(x - 30 * sc, y - 30 * sc, 60 * sc, 60 * sc); }
+    ctx.fillStyle = "#4E6B2E"; ctx.fillRect(x - 1 * sc, y - 10 * sc, 2.4 * sc, 4 * sc);
+    [[-4, "#D9661F"], [4, "#D9661F"], [0, "#E8792A"]].forEach(([dx, c]) => { ctx.fillStyle = c; ctx.beginPath(); ctx.ellipse(x + dx * sc, y, 6 * sc, 7 * sc, 0, 0, 6.29); ctx.fill(); });
+    const lit = night ? `rgba(255,${200 + Math.floor(40 * Math.sin(t * 7 + seed))},90,1)` : "#5A2A10";
+    ctx.fillStyle = lit;
+    ctx.beginPath(); ctx.moveTo(x - 5 * sc, y - 1 * sc); ctx.lineTo(x - 3 * sc, y - 4 * sc); ctx.lineTo(x - 1 * sc, y - 1 * sc); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(x + 1 * sc, y - 1 * sc); ctx.lineTo(x + 3 * sc, y - 4 * sc); ctx.lineTo(x + 5 * sc, y - 1 * sc); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(x - 5 * sc, y + 2 * sc); ctx.lineTo(x - 2.5 * sc, y + 4 * sc); ctx.lineTo(x, y + 2.8 * sc); ctx.lineTo(x + 2.5 * sc, y + 4 * sc); ctx.lineTo(x + 5 * sc, y + 2 * sc); ctx.lineTo(x, y + 5.5 * sc); ctx.closePath(); ctx.fill();
+  }
+  function drawSeasonDecor(c, t, night) {
+    if (c.season === "october") {   // pumpkins sit on the stoops all month; more come out for Halloween
+      // they sit on top of the big sign, like pumpkins on a stoop (or along the bottom if the sign is hidden)
+      const el = document.getElementById("plaque"), r = el && !el.hidden ? el.getBoundingClientRect() : null;
+      const sc = w < 600 ? 1 : 1.3, onSign = r && r.width > 0;
+      const base = onSign ? r.top - 8 * sc : h - M - 16 * sc, x0 = onSign ? r.left : 0, x1 = onSign ? r.right : w;
+      const spots = [[0.05, 1], [0.1, 0.78], [0.94, 1.1], ...(c.halloween || c.md === 1101 ? [[0.5, 0.9], [0.88, 0.75], [0.3, 0.85]] : [])];
+      spots.forEach(([fx, s2], i) => pumpkin(x0 + fx * (x1 - x0), base - (s2 - 1) * 7 * sc, sc * s2, night, t, i * 1.7));
     }
   }
 
@@ -141,6 +195,43 @@ const Fx = (() => {
         ctx.fillStyle = ["#B5532B", "#C9952C", "#8E3A26"][s.hue];
         ctx.beginPath(); ctx.ellipse(0, 0, 7 * s.s, 3.6 * s.s, 0, 0, 6.29); ctx.fill();
         ctx.strokeStyle = "rgba(60,30,10,0.5)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-7 * s.s, 0); ctx.lineTo(7 * s.s, 0); ctx.stroke();
+      }
+      if (s.kind === "ghost") {   // a little sheet ghost, rising and wobbling, fading in and out
+        const x = s.x + Math.sin(now * 1.4) * 18, y = s.y - p * h * 0.35, a = Math.min(1, p * 5, (1 - p) * 5) * 0.8;
+        ctx.globalAlpha = a; ctx.fillStyle = "#F4F1EA";
+        ctx.beginPath(); ctx.arc(x, y, 9, Math.PI, 0); ctx.lineTo(x + 9, y + 12);
+        for (let k = 0; k < 4; k++) ctx.lineTo(x + 9 - (k + 0.5) * 4.5, y + 12 + (k % 2 ? 3 : -2) + Math.sin(now * 6 + k) * 1.2);
+        ctx.lineTo(x - 9, y + 12); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = "#1B1C1A"; ctx.beginPath(); ctx.ellipse(x - 3, y - 1, 1.4, 2, 0, 0, 6.29); ctx.ellipse(x + 3, y - 1, 1.4, 2, 0, 0, 6.29); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(x, y + 4, 1.4, 1.8, 0, 0, 6.29); ctx.fill();
+      }
+      if (s.kind === "marcher" || s.kind === "turkey") {   // marchers and the turkey walk the little track, upright
+        const P = perimLen(), q = perimPoint(((s.start + s.dir * p * s.dist) % P + P) % P);
+        ctx.globalAlpha = Math.min(1, p * 8, (1 - p) * 8); ctx.translate(q.x, q.y);
+        const step = Math.sin(now * 7) * 2.4, ink = night ? "#E6DCC6" : "#2B2A2E";
+        if (s.kind === "turkey") {
+          ctx.scale(s.dir, 1); const bob = Math.abs(Math.sin(now * 5)) * 1.2;
+          ["#8E3A26", "#C9952C", "#B5532B", "#D9B24A", "#8E3A26"].forEach((c, k) => { ctx.fillStyle = c; ctx.save(); ctx.translate(-4, -10); ctx.rotate(-1.2 + k * 0.42); ctx.beginPath(); ctx.ellipse(0, -7, 2.6, 7, 0, 0, 6.29); ctx.fill(); ctx.restore(); });   // the tail fan
+          ctx.fillStyle = "#5C3A22"; ctx.beginPath(); ctx.ellipse(0, -8, 6, 5, 0, 0, 6.29); ctx.fill();
+          ctx.beginPath(); ctx.ellipse(4, -14 + bob, 2.2, 3.6, 0.3, 0, 6.29); ctx.fill();
+          ctx.fillStyle = "#C0392B"; ctx.beginPath(); ctx.ellipse(5.4, -12 + bob, 0.9, 1.8, 0, 0, 6.29); ctx.fill();   // wattle
+          ctx.fillStyle = "#E8A33A"; ctx.beginPath(); ctx.moveTo(6, -16 + bob); ctx.lineTo(8.5, -15 + bob); ctx.lineTo(6, -14.4 + bob); ctx.fill();
+          ctx.fillStyle = "#1B1C1A"; ctx.fillRect(4.4, -16.4 + bob, 1, 1);
+          ctx.strokeStyle = "#C98A3A"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-1, -4); ctx.lineTo(-1 + step * 0.6, 0); ctx.moveTo(1.5, -4); ctx.lineTo(1.5 - step * 0.6, 0); ctx.stroke();
+        } else {
+          ctx.strokeStyle = ink; ctx.lineWidth = 1.6; ctx.lineCap = "round";
+          ctx.beginPath(); ctx.moveTo(0, -6); ctx.lineTo(step, 0); ctx.moveTo(0, -6); ctx.lineTo(-step, 0); ctx.stroke();
+          if (s.costume === "ghost") { ctx.fillStyle = "#F4F1EA"; ctx.beginPath(); ctx.arc(0, -11, 4, Math.PI, 0); ctx.lineTo(4, -4); ctx.lineTo(-4, -4); ctx.closePath(); ctx.fill();
+            ctx.fillStyle = "#1B1C1A"; ctx.fillRect(-2, -12, 1, 1.4); ctx.fillRect(1, -12, 1, 1.4); }
+          else {
+            ctx.fillStyle = s.shirt; ctx.fillRect(-2, -12, 4, 6);
+            ctx.beginPath(); ctx.moveTo(1, -11); ctx.lineTo(3, -14); ctx.stroke();   // arm up, holding the pole
+            if (s.costume === "pumpkin") { ctx.fillStyle = "#E8792A"; ctx.beginPath(); ctx.ellipse(0, -15, 3.4, 3, 0, 0, 6.29); ctx.fill(); ctx.fillStyle = "#4E6B2E"; ctx.fillRect(-0.5, -18.6, 1, 1.6); }
+            else { ctx.fillStyle = "#C99A6B"; ctx.beginPath(); ctx.arc(0, -14.5, 2.4, 0, 6.29); ctx.fill(); }
+            if (s.costume === "witch") { ctx.fillStyle = "#1B1C1A"; ctx.fillRect(-4, -16.5, 8, 1.2); ctx.beginPath(); ctx.moveTo(-2.4, -16.5); ctx.lineTo(1.5, -23); ctx.lineTo(2.4, -16.5); ctx.fill(); }
+            if (s.flag) flag(3, -24, FLAGS[s.flag], now * 6 + s.t0);
+          }
+        }
       }
       if (s.kind === "rat" || s.kind === "jogger") {   // things that travel along the little track
         const P = perimLen(), q = perimPoint(((s.start + s.dir * p * s.dist) % P + P) % P);
@@ -232,13 +323,15 @@ const Fx = (() => {
     { dir: 1,  speed: 38, offset: 0,   stripe: "#8A8D93", dot: "#A7A9AC" },   // L
     { dir: -1, speed: 31, offset: 0.5, stripe: "#FF6319", dot: "#FF6319" },   // M
   ];
+  let pride = false;
   function drawCar(q, flip, stripe, dot, front, night) {
     ctx.save(); ctx.translate(q.x, q.y); ctx.rotate(q.a + (flip ? Math.PI : 0));
     ctx.fillStyle = night ? "#C9CCD2" : "#A9ADB3";
     ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-11, -4, 22, 8, 2.5) : ctx.rect(-11, -4, 22, 8); ctx.fill();
     ctx.fillStyle = night ? "rgba(255,222,150,0.95)" : "rgba(40,48,60,0.65)";
     for (let wx = -8; wx < 8; wx += 5) ctx.fillRect(wx, -2, 3, 2.4);
-    ctx.fillStyle = stripe; ctx.fillRect(-11, 2, 22, 1.2);
+    if (pride) RAINBOW.forEach((c, k) => { ctx.fillStyle = c; ctx.fillRect(-11 + k * 22 / 6, 1.6, 22 / 6 + 0.1, 2); });   // June: rainbow stripe
+    else { ctx.fillStyle = stripe; ctx.fillRect(-11, 2, 22, 1.2); }
     if (st.wx && st.wx.kind === "snow") { ctx.fillStyle = "#FFFFFF"; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-11, -6, 22, 3, 1.5) : ctx.rect(-11, -6, 22, 3); ctx.fill(); }
     if (front) { ctx.fillStyle = dot; ctx.beginPath(); ctx.arc(9, -0.5, 2.2, 0, 6.29); ctx.fill();
       if (night) { ctx.fillStyle = "rgba(255,240,200,0.9)"; ctx.fillRect(10.5, -3, 1, 6); } }   // headlight at night
@@ -384,10 +477,13 @@ const Fx = (() => {
     }
 
     // the little things
-    const ctxInfo = { ...special(now), night, phase, kind: wx.kind, clear: !["cloudy", "rain", "storm", "snow", "fog"].includes(wx.kind), cold: !!wx.cold, md: md(now) };
+    const sp = special(now);
+    pride = sp.season === "pride";
+    const ctxInfo = { ...sp, night, phase, kind: wx.kind, clear: !["cloudy", "rain", "storm", "snow", "fog"].includes(wx.kind), cold: !!wx.cold, md: md(now) };
     if (!reduce) schedule(ctxInfo, t);
     if (night && (wx.feels ?? 0) >= 65 && ctxInfo.clear) drawFireflies(t);
     drawTrack(night);
+    drawSeasonDecor(ctxInfo, t, night);
     drawTrains(t, night);
     drawSprites(t, night);
 
@@ -411,7 +507,7 @@ const Fx = (() => {
       cancelAnimationFrame(raf); raf = requestAnimationFrame(frame);
     },
     unmount() { cancelAnimationFrame(raf); raf = 0; if (ctx) ctx.clearRect(0, 0, w, h); },
-    trigger(kind) { if (ctx) spawn(kind, {}); },
+    trigger(kind) { if (ctx) spawn(kind, { prideMarch: true }); },
     moonHit(x, y) { return !!moonSpot && Math.hypot(x - moonSpot.x, y - moonSpot.y) <= moonSpot.r + 14; },
     set(s) { st = { ...st, ...s }; if (reduce && ctx) { last = 0; frame(performance.now()); } },
     isNight() { return phaseNow(new Date()).phase === "night"; },
