@@ -273,7 +273,7 @@
 <script src="suncalc.js?v=10"></script>
 <script src="data.js?v=10"></script>
 <script src="scene.js?v=10"></script>
-<script src="fx.js?v=20"></script>
+<script src="fx.js?v=21"></script>
 <script src="tmpl.js?v=14"></script>
 <script>
 // ---------- themes: line → neighborhood → neighborhood at night ----------
@@ -468,7 +468,7 @@ function alertsNow() {
   sheet.innerHTML = `<div class="pr-head"><b>Let's pretend it's…</b><button type="button" id="pr-real">Back to real</button><button type="button" id="pr-close" aria-label="Close">Done</button></div>` +
     PRETEND_OPTIONS.map(([key, label, opts]) => `<div class="pr-group"><span>${label}</span><div>${opts.map(([v, t]) =>
       `<button type="button" class="pr-chip" data-k="${key === "extra" ? v : key}" data-v="${key === "extra" ? "1" : v}">${t}</button>`).join("")}</div></div>`).join("") +
-    `<div class="pr-group"><span>Show me now (Line map)</span><div>${[["star", "Shooting star"], ["plane", "Plane"], ["pigeon", "Pigeon"], ["steam", "Steam"], ["leaves", "Leaves"], ["train", "Little train"], ["bats", "Bats"], ["fireworks", "Fireworks"]]
+    `<div class="pr-group"><span>Show me now (Line map)</span><div>${[["star", "Shooting star"], ["plane", "Plane"], ["pigeon", "Pigeon"], ["steam", "Steam"], ["leaves", "Leaves"], ["train", "Little L train"], ["bats", "Bats"], ["fireworks", "Fireworks"]]
       .map(([v, t]) => `<button type="button" class="pr-chip" data-egg="${v}">${t}</button>`).join("")}</div></div>`;
   sheet.addEventListener("click", e => {
     const egg = e.target.closest("[data-egg]");

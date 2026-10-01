@@ -58,7 +58,7 @@ const Fx = (() => {
     pigeon:   { every: [60, 150], ok: c => !c.night && c.kind !== "storm" && c.kind !== "snow" },
     steam:    { every: c => c.cold ? [25, 55] : [120, 240], ok: () => true },
     leaves:   { every: [40, 90], ok: c => c.md >= 922 && c.md <= 1130 && c.kind !== "snow" },
-    train:    { every: [110, 220], ok: () => true },
+    train:    { every: [70, 150], ok: () => true },
     bats:     { every: [35, 70], ok: c => c.night && c.md >= 1024 && c.md <= 1101 },
     fireworks:{ every: [6, 14], ok: c => c.night && (c.md === 704 || c.md === 1231 || c.md === 101) },
   };
@@ -70,7 +70,7 @@ const Fx = (() => {
     if (kind === "pigeon") { const dir = Math.random() < 0.5 ? 1 : -1; sprites.push({ kind, t0: now, dur: rand(7, 10), dir, y: rand(0.12, 0.45) * h, s: rand(0.8, 1.2) }); }
     if (kind === "steam") sprites.push({ kind, t0: now, dur: 9, x: rand(0.1, 0.9) * w, stack: Math.random() < 0.3 });
     if (kind === "leaves") for (let i = 0; i < 7; i++) sprites.push({ kind: "leaf", t0: now + i * rand(0.4, 1.4), dur: rand(9, 14), x: rand(0, 1) * w, s: rand(0.8, 1.3), hue: i % 3, spin: rand(-2, 2) });
-    if (kind === "train") { const dir = Math.random() < 0.5 ? 1 : -1; sprites.push({ kind, t0: now, dur: 16, dir }); }
+    if (kind === "train") { const P = perimLen(); sprites.push({ kind, t0: now, dur: P / 85, dir: Math.random() < 0.5 ? 1 : -1, start: Math.random() * P }); }
     if (kind === "bats") for (let i = 0; i < 3; i++) sprites.push({ kind: "bat", t0: now + i * 0.6, dur: 9, dir: 1, y: rand(0.1, 0.35) * h + i * 18 });
     if (kind === "fireworks") sprites.push({ kind: "burst", t0: now, dur: 2.4, x: rand(0.15, 0.85) * w, y: rand(0.08, 0.35) * h, col: ["#F2C14E", "#E8735A", "#7FD6CF", "#F4EBD0"][Math.floor(rand(0, 4))] });
   }
@@ -130,14 +130,17 @@ const Fx = (() => {
         ctx.beginPath(); ctx.ellipse(0, 0, 7 * s.s, 3.6 * s.s, 0, 0, 6.29); ctx.fill();
         ctx.strokeStyle = "rgba(60,30,10,0.5)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-7 * s.s, 0); ctx.lineTo(7 * s.s, 0); ctx.stroke();
       }
-      if (s.kind === "train") {   // a little el train gliding along the bottom edge
-        const len = 3 * 46, x = s.dir > 0 ? -len + p * (w + len) : w - p * (w + len), y = h - 18;
-        ctx.fillStyle = night ? "rgba(20,30,40,0.55)" : "rgba(60,64,72,0.28)"; ctx.fillRect(0, y + 12, w, 3);
+      if (s.kind === "train") {   // a little L train doing one lap around the edge of the screen
+        const P = perimLen(), head = (s.start + s.dir * p * P + P * 4) % P;
         for (let car = 0; car < 3; car++) {
-          const cx = x + car * 46;
-          ctx.fillStyle = night ? "rgba(30,40,52,0.8)" : "rgba(80,86,96,0.45)"; ctx.fillRect(cx, y, 42, 11);
-          ctx.fillStyle = night ? "rgba(255,220,140,0.85)" : "rgba(220,226,232,0.6)";
-          for (let wx = cx + 4; wx < cx + 38; wx += 8) ctx.fillRect(wx, y + 3, 5, 3);
+          const q = perimPoint((head - s.dir * car * 25 + P * 4) % P);
+          ctx.save(); ctx.translate(q.x, q.y); ctx.rotate(q.a + (s.dir < 0 ? Math.PI : 0));
+          ctx.fillStyle = night ? "#C9CCD2" : "#A7A9AC";
+          ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-11, -4, 22, 8, 2.5) : ctx.rect(-11, -4, 22, 8); ctx.fill();
+          ctx.fillStyle = night ? "rgba(255,222,150,0.95)" : "rgba(40,48,60,0.65)";
+          for (let wx = -8; wx < 8; wx += 5) ctx.fillRect(wx, -2, 3, 2.4);
+          ctx.fillStyle = "#3E7FC1"; ctx.fillRect(-11, 2, 22, 1);   // a thin stripe
+          ctx.restore();
         }
       }
       if (s.kind === "bat") {   // Halloween week
@@ -154,6 +157,30 @@ const Fx = (() => {
       }
       ctx.restore();
     }
+  }
+
+  // the track around the screen: a rounded rectangle just inside the edge
+  const M = 7, RAD = 20;
+  function perimLen() { return 2 * (w - 2 * M - 2 * RAD) + 2 * (h - 2 * M - 2 * RAD) + 2 * Math.PI * RAD; }
+  function perimPoint(d) {   // walk clockwise from the top-left, after the corner
+    const W2 = w - 2 * M - 2 * RAD, H2 = h - 2 * M - 2 * RAD, Q = Math.PI * RAD / 2;
+    const segs = [
+      [W2, t => ({ x: M + RAD + t, y: M, a: 0 })],
+      [Q, t => { const th = -Math.PI / 2 + t / RAD; return { x: w - M - RAD + Math.cos(th) * RAD, y: M + RAD + Math.sin(th) * RAD, a: th + Math.PI / 2 }; }],
+      [H2, t => ({ x: w - M, y: M + RAD + t, a: Math.PI / 2 })],
+      [Q, t => { const th = t / RAD; return { x: w - M - RAD + Math.cos(th) * RAD, y: h - M - RAD + Math.sin(th) * RAD, a: th + Math.PI / 2 }; }],
+      [W2, t => ({ x: w - M - RAD - t, y: h - M, a: Math.PI })],
+      [Q, t => { const th = Math.PI / 2 + t / RAD; return { x: M + RAD + Math.cos(th) * RAD, y: h - M - RAD + Math.sin(th) * RAD, a: th + Math.PI / 2 }; }],
+      [H2, t => ({ x: M, y: h - M - RAD - t, a: -Math.PI / 2 })],
+      [Q, t => { const th = Math.PI + t / RAD; return { x: M + RAD + Math.cos(th) * RAD, y: M + RAD + Math.sin(th) * RAD, a: th + Math.PI / 2 }; }],
+    ];
+    for (const [len, f] of segs) { if (d <= len) return f(d); d -= len; }
+    return segs[0][1](0);
+  }
+  function drawTrack(night) {   // faint rail with ties, always there, like a model railroad around the room
+    const P = perimLen();
+    ctx.fillStyle = night ? "rgba(233,200,106,0.16)" : "rgba(60,64,72,0.13)";
+    for (let d = 0; d < P; d += 7) { const q = perimPoint(d); ctx.save(); ctx.translate(q.x, q.y); ctx.rotate(q.a); ctx.fillRect(-1, -4, 2, 8); ctx.restore(); }
   }
 
   // warm nights: fireflies drifting low on the page
@@ -286,6 +313,7 @@ const Fx = (() => {
     const ctxInfo = { night, phase, kind: wx.kind, clear: !["cloudy", "rain", "storm", "snow", "fog"].includes(wx.kind), cold: !!wx.cold, md: md(now) };
     if (!reduce) schedule(ctxInfo, t);
     if (night && (wx.feels ?? 0) >= 65 && ctxInfo.clear) drawFireflies(t);
+    drawTrack(night);
     drawSprites(t, night);
 
     // cold: frost creeping in from the corners. hot: warm haze.
