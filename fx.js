@@ -185,13 +185,19 @@ const Fx = (() => {
       g.addColorStop(0, "rgba(18,58,60,0.92)"); g.addColorStop(1, "rgba(12,38,42,0.92)");
       ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
     }
-    else if (phase === "dusk" || phase === "golden") {
+    else {
+      // daytime gets a real sky so the frosted glass has something to frost
+      const gray = ["cloudy", "rain", "storm", "snow", "fog"].includes(wx.kind);
+      const SKY = {
+        day:    gray ? ["#AAB4BF", "#C9CED3", "#E4E2DC"] : ["#7FB8E0", "#B9DAEC", "#F1ECE2"],
+        golden: gray ? ["#B9B3B0", "#D6CBC0", "#EDE4D8"] : ["#8FB3D9", "#F2C79A", "#F7E3C6"],
+        dusk:   ["#4E3F78", "#B97F97", "#F0B98E"],
+      }[phase];
       const g = ctx.createLinearGradient(0, 0, 0, h);
-      g.addColorStop(0, phase === "dusk" ? "rgba(92,72,128,0.55)" : "rgba(255,170,100,0.30)");
-      g.addColorStop(0.55, phase === "dusk" ? "rgba(214,130,120,0.22)" : "rgba(255,200,140,0.10)");
-      g.addColorStop(1, "rgba(0,0,0,0)");
+      g.addColorStop(0, SKY[0]); g.addColorStop(0.55, SKY[1]); g.addColorStop(1, SKY[2]);
       ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
     }
+
     // overcast dims the day
     const gray = wx.kind === "cloudy" || wx.kind === "rain" || wx.kind === "storm" || wx.kind === "snow" || wx.kind === "fog";
     if (gray && !night) { ctx.fillStyle = "rgba(110,118,130,0.22)"; ctx.fillRect(0, 0, w, h); }
