@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Out the Door">
+<title>Out the Door</title>
+<style>
+  :root { --bg: #fff; --fg: #000; --muted: #666; --line: #ddd; color-scheme: light dark; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #000; --fg: #fff; --muted: #999; --line: #333; } }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.35 system-ui, -apple-system, Helvetica, Arial, sans-serif;
+         padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom)); }
+  h1 { font-size: 15px; font-weight: 600; margin: 0 0 12px; display: flex; justify-content: space-between; color: var(--muted); }
+  .opt { padding: 14px 0; border-top: 1px solid var(--line); }
+  .leave { font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .opt.first .leave { font-size: 44px; }
+  .what { font-size: 17px; }
+  .meta, .later { color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
+  .none { color: var(--muted); }
+  #weather { display: grid; gap: 8px; margin-bottom: 14px; }
+  #weather:empty { display: none; }
+  .warn { border: 2px solid var(--fg); padding: 10px 12px; }
+  .warn b { display: block; font-size: 18px; }
+  .warn span { color: var(--muted); font-size: 14px; }
+  #status { margin-top: 12px; color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<h1><span>Out the Door</span><span id="clock"></span></h1>
+<div id="weather"></div>
+<div id="list"><div class="none">Loading trains…</div></div>
+<div id="status"></div>
+
+<script>
+// ---------- settings ----------
+const BUFFER_MIN = 1;                      // extra slack on top of the walk
+const REFRESH_SEC = 30;                    // how often to pull the MTA feeds
+const FEED = "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2F";
+
+// Walk times from home (Google Maps, walking).
+// toward = any Manhattan stop on that line; a train counts only if it reaches it after your station.
+const OPTIONS = [
+  { route: "M", feed: "gtfs-bdfm", stop: "M10", station: "Central Av",          walk: 5,  toward: "M18" },
+  { route: "M", feed: "gtfs-bdfm", stop: "M11", station: "Myrtle Av–Broadway", walk: 11, toward: "M18" },
+  { route: "J", feed: "gtfs-jz",   stop: "M11", station: "Myrtle Av–Broadway", walk: 11, toward: "M18" },
+  { route: "Z", feed: "gtfs-jz",   stop: "M11", station: "Myrtle Av–Broadway", walk: 11, toward: "M18" },
+  { route: "L", feed: "gtfs-l",    stop: "L15", station: "Jefferson St",       walk: 13, toward: "L06" },
+  { route: "L", feed: "gtfs-l",    stop: "L14", station: "Morgan Av",          walk: 13, toward: "L06" },
+];
+
+// Where trains end up (last stop of the trip) -> readable name.
+const TERMINALS = {
+  L01: "8 Av", L03: "Union Sq", G08: "Forest Hills–71 Av", M23: "Broad St", M22: "Fulton St",
+  M21: "Chambers St", M18: "Delancey St–Essex St", D15: "47–50 Sts", B08: "Lexington Av/63 St",
+  Q05: "96 St", D14: "7 Av", G21: "Queens Plaza", M19: "Bowery", M20: "Canal St",
+};
+
+// ---------- minimal GTFS-realtime protobuf reader ----------
+const td = new TextDecoder();
+function fields(buf, s = 0, e = buf.length) {
+  const out = []; let i = s;
+  const varint = () => { let r = 0, m = 1, b; do { b = buf[i++]; r += (b & 127) * m; m *= 128; } while (b & 128); return r; };
+  while (i < e) {
+    const k = varint(), f = Math.floor(k / 8), w = k & 7;
+    if (w === 0) out.push([f, varint()]);
+    else if (w === 2) { const L = varint(); out.push([f, [i, i + L]]); i += L; }
+    else if (w === 1) i += 8; else if (w === 5) i += 4; else break;
+  }
+  return out;
+}
+function parseFeed(buf) {
+  const trips = [];
+  for (const [f, v] of fields(buf)) {
+    if (f !== 2) continue;                                   // FeedMessage.entity
+    let tu = null;
+    for (const [f2, v2] of fields(buf, ...v)) if (f2 === 3) tu = v2;   // trip_update
+    if (!tu) continue;
+    let route = ""; const stops = [];
+    for (const [f3, v3] of fields(buf, ...tu)) {
+      if (f3 === 1) for (const [a, b] of fields(buf, ...v3)) if (a === 5) route = td.decode(buf.subarray(...b));
+      if (f3 === 2) {
+        let id = "", t = 0;
+        for (const [a, b] of fields(buf, ...v3)) {
+          if (a === 4) id = td.decode(buf.subarray(...b));
+          if ((a === 2 || a === 3) && !t) for (const [c, d] of fields(buf, ...b)) if (c === 2) t = d;
+        }
+        stops.push([id.slice(0, 3), t]);
+      }
+    }
+    trips.push({ route, stops });
+  }
+  return trips;
+}
+
+// ---------- data ----------
+let trains = {};        // option index -> [{t, terminal}]
+let updated = 0, lastError = "";
+
+async function refresh() {
+  const feeds = {};
+  try {
+    for (const name of new Set(OPTIONS.map(o => o.feed))) {
+      const r = await fetch(FEED + name, { cache: "no-store" });
+      if (!r.ok) throw new Error(`${name}: HTTP ${r.status}`);
+      feeds[name] = parseFeed(new Uint8Array(await r.arrayBuffer()));
+    }
+  } catch (e) { lastError = String(e.message || e); render(); return; }
+
+  const now = Date.now() / 1000, next = {};
+  OPTIONS.forEach((o, i) => {
+    next[i] = [];
+    for (const trip of feeds[o.feed]) {
+      if (trip.route !== o.route) continue;
+      const k = trip.stops.findIndex(s => s[0] === o.stop);
+      if (k < 0 || !trip.stops[k][1] || trip.stops[k][1] < now - 60) continue;
+      if (!trip.stops.slice(k + 1).some(s => s[0] === o.toward)) continue;   // not Manhattan-bound
+      const last = trip.stops[trip.stops.length - 1][0];
+      next[i].push({ t: trip.stops[k][1], terminal: TERMINALS[last] || "Manhattan" });
+    }
+    next[i].sort((a, b) => a.t - b.t);
+  });
+  trains = next; updated = now; lastError = ""; render();
+}
+
+// ---------- weather (Open-Meteo, free, no key) ----------
+const HOME = { lat: 40.70, lon: -73.93 };   // rounded on purpose: neighborhood-level is plenty for weather
+const WEATHER_URL = `https://api.open-meteo.com/v1/forecast?latitude=${HOME.lat}&longitude=${HOME.lon}` +
+  "&hourly=apparent_temperature,precipitation_probability,precipitation,snowfall,wind_gusts_10m,uv_index,weather_code" +
+  "&current=precipitation,weather_code&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch" +
+  "&timezone=America%2FNew_York&past_hours=12&forecast_hours=4&timeformat=unixtime";
+let warnings = [];
+
+// Returns only things worth acting on in the next ~3 hours. Empty list = nothing to show.
+function weatherWarnings(w, now) {
+  const h = w.hourly, out = [];
+  const idx = h.time.map((t, i) => i);
+  const ahead = idx.filter(i => h.time[i] + 3600 > now && h.time[i] <= now + 3 * 3600);
+  const past = idx.filter(i => h.time[i] + 3600 <= now);
+  if (!ahead.length) return out;
+  const max = k => Math.max(...ahead.map(i => h[k][i] ?? 0));
+  const min = k => Math.min(...ahead.map(i => h[k][i] ?? 0));
+  const sum = (k, set) => set.reduce((a, i) => a + (h[k][i] ?? 0), 0);
+  const firstHour = test => { const i = ahead.find(test); return i === undefined ? "" : hm(Math.max(h.time[i], now)); };
+
+  // Storms / rain / snow
+  const storm = ahead.some(i => h.weather_code[i] >= 95);
+  const rainingNow = (w.current?.precipitation ?? 0) > 0;
+  const rainSoon = max("precipitation_probability") >= 40 || sum("precipitation", ahead) >= 0.02;
+  if (sum("snowfall", ahead) > 0) out.push(["Snow: wear boots", `About ${sum("snowfall", ahead).toFixed(1)} in expected by ${hm(now + 3 * 3600)}`]);
+  if (storm) out.push(["Thunderstorms possible", `Starting around ${firstHour(i => h.weather_code[i] >= 95)}. Umbrella, and maybe wait it out`]);
+  else if (rainingNow) out.push(["Raining now: umbrella", `${max("precipitation_probability")}% chance it keeps going`]);
+  else if (rainSoon) out.push(["Bring an umbrella", `${max("precipitation_probability")}% chance of rain, from about ${firstHour(i => h.precipitation_probability[i] >= 40 || h.precipitation[i] > 0)}`]);
+
+  // Puddles from earlier rain
+  const fell = sum("precipitation", past);
+  if (!rainSoon && !rainingNow && fell >= 0.15) out.push(["Wet streets: waterproof shoes", `${fell.toFixed(2)} in of rain in the last 12 hours`]);
+
+  // Temperature (feels-like)
+  const lo = Math.round(min("apparent_temperature")), hi = Math.round(max("apparent_temperature"));
+  if (lo <= 32) out.push(["Freezing: coat, hat, gloves", `Feels like ${lo}°F`]);
+  else if (lo <= 45) out.push(["Cold: warm coat", `Feels like ${lo}°F`]);
+  else if (lo <= 55) out.push(["Cool: bring a jacket", `Feels like ${lo}°F`]);
+  if (hi >= 90) out.push(["Very hot: water and light clothes", `Feels like ${hi}°F`]);
+  else if (hi >= 84) out.push(["Hot: dress light, bring water", `Feels like ${hi}°F`]);
+  const nowFeel = h.apparent_temperature[ahead[0]];
+  if (lo > 55 && nowFeel - lo >= 12) out.push(["Getting colder: bring a layer", `Drops from ${Math.round(nowFeel)}°F to ${lo}°F`]);
+
+  // Wind and sun
+  const gust = Math.round(max("wind_gusts_10m"));
+  if (gust >= 30) out.push(["Windy", `Gusts up to ${gust} mph${rainSoon ? ". Umbrellas will struggle" : ""}`]);
+  if (max("uv_index") >= 7) out.push(["Strong sun: sunscreen", `UV index ${Math.round(max("uv_index"))}`]);
+  return out;
+}
+
+async function refreshWeather() {
+  try {
+    const w = await (await fetch(WEATHER_URL, { cache: "no-store" })).json();
+    warnings = weatherWarnings(w, Date.now() / 1000);
+  } catch (e) { /* keep last warnings; trains still work */ }
+  render();
+}
+
+// ---------- display ----------
+const hm = t => { const d = new Date(t * 1000); return `${d.getHours() % 12 || 12}:${String(d.getMinutes()).padStart(2, "0")}`; };
+const leaveText = s => s < 60 ? "Leave now" : `Leave in ${Math.floor(s / 60)} min`;
+
+function render() {
+  const now = Date.now() / 1000;
+  document.getElementById("clock").textContent = hm(now);
+
+  const rows = OPTIONS.map((o, i) => {
+    const catchable = (trains[i] || [])
+      .map(x => ({ ...x, leave: x.t - (o.walk + BUFFER_MIN) * 60 - now }))
+      .filter(x => x.leave > -30);
+    return { o, catchable };
+  }).filter(r => r.catchable.length)
+    .sort((a, b) => a.catchable[0].leave - b.catchable[0].leave);
+
+  document.getElementById("weather").innerHTML =
+    warnings.map(([t, d]) => `<div class="warn"><b>${t}</b><span>${d}</span></div>`).join("");
+
+  const list = document.getElementById("list");
+  if (!rows.length) {
+    list.innerHTML = `<div class="none">${updated ? "No Manhattan-bound trains you can make right now." : "Loading trains…"}</div>`;
+  } else {
+    list.innerHTML = rows.map((r, n) => {
+      const x = r.catchable[0];
+      const later = r.catchable.slice(1, 3).map(y => `${Math.max(0, Math.floor(y.leave / 60))} min`).join(", ");
+      return `<div class="opt${n === 0 ? " first" : ""}">
+        <div class="leave">${leaveText(x.leave)}</div>
+        <div class="what">to catch the <b>${r.o.route}</b> toward ${x.terminal}</div>
+        <div class="meta">${r.o.station} · ${r.o.walk} min walk · train arrives ${hm(x.t)}</div>
+        ${later ? `<div class="later">next: leave in ${later}</div>` : ""}
+      </div>`;
+    }).join("");
+  }
+
+  const age = now - updated;
+  document.getElementById("status").textContent =
+    lastError ? `Can't reach the MTA (${lastError}). Retrying…` :
+    updated ? (age > 120 ? `Data is ${Math.round(age / 60)} min old` : `Live · updated ${Math.round(age)}s ago`) : "";
+}
+
+refresh();
+refreshWeather();
+setInterval(refresh, REFRESH_SEC * 1000);
+setInterval(refreshWeather, 10 * 60 * 1000);
+setInterval(render, 1000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) { refresh(); refreshWeather(); } });
+</script>
+</body>
+</html>
