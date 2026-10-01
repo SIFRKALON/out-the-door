@@ -237,7 +237,7 @@ function serviceAlerts(feed, now) {
     const text = (a.header_text?.translation || []).find(t => t.language === "en")?.text;
     if (!text || seen.has(text)) continue;
     seen.add(text);
-    out.push({ html: cleanAlertText(text), when: active ? "Now" : `From ${hm(soon)}`,
+    out.push({ html: cleanAlertText(text), when: active ? "Now" : `From ${hm(soon)}${new Date(soon * 1000).getHours() < 12 ? "am" : "pm"}`,
                type: a["transit_realtime.mercury_alert"]?.alert_type || "", active });
   }
   return out.sort((x, y) => y.active - x.active).slice(0, 5);
